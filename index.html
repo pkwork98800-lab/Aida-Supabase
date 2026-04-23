@@ -178,8 +178,8 @@ table tr:hover td{background:#fafbfc}
       <h3>Admin Access</h3>
       <p class="sub">Enter admin credentials</p>
       <form onsubmit="doAdminLogin(event)">
-        <div class="mb-3"><label class="form-label">Username</label><input class="form-control" id="admin-user" placeholder="admin" required></div>
-        <div class="mb-3"><label class="form-label">Password</label><input class="form-control" type="password" id="admin-pass" placeholder="aida123" required></div>
+        <div class="mb-3"><label class="form-label">Username</label><input class="form-control" id="admin-user" placeholder="Admin Username" required autocomplete=" username"></div>
+        <div class="mb-3"><label class="form-label">Password</label><input class="form-control" type="password" id="admin-pass" required autocomplete="current-password"></div>
         <div class="auth-error" id="admin-error"></div>
         <button class="btn-grad w-100 mt-2" type="submit">Authenticate</button>
       </form>
@@ -252,10 +252,19 @@ table tr:hover td{background:#fafbfc}
         </div>
       </div>
       <div class="admin-tab" id="tab-library" style="display:none">
-        <h3>Disease Library (100)</h3>
-        <div class="panel">
+        <h3>Disease Library (<span id="lib-count">100</span>)</h3>
+        <div class="panel mb-3">
           <input class="form-control mb-3" placeholder="Search diseases..." oninput="filterDiseases(this.value)">
           <table><thead><tr><th>#</th><th>Disease</th><th>Symptoms</th><th>Severity</th></tr></thead><tbody id="lib-table"></tbody></table>
+        </div>
+        <div class="panel">
+          <h6>Add New Disease</h6>
+          <div class="mb-2"><input class="form-control" id="new-disease-name" placeholder="Disease Name"></div>
+          <div class="mb-2"><input class="form-control" id="new-disease-symptoms" placeholder="Symptoms (comma separated)"></div>
+          <div class="mb-2"><input class="form-control" id="new-disease-remedies" placeholder="Home Remedies"></div>
+          <div class="mb-2"><input class="form-control" id="new-disease-prescriptions" placeholder="Prescriptions"></div>
+          <div class="mb-2"><select class="form-control" id="new-disease-severity"><option value="minor">Minor</option><option value="moderate">Moderate</option><option value="major">Major</option></select></div>
+          <button class="btn-grad" onclick="addDisease()">Add Disease</button>
         </div>
       </div>
     </main>
@@ -641,6 +650,23 @@ function renderDiseases() {
 function filterDiseases(q) {
   const f = DISEASES.filter(d => d.name.toLowerCase().includes(q.toLowerCase()) || d.symptoms.some(s => s.includes(q.toLowerCase())));
   document.getElementById('lib-table').innerHTML = f.length ? f.map((d, i) => '<tr><td>'+(i+1)+'</td><td>'+d.name+'</td><td>'+d.symptoms.slice(0,4).join(', ')+'</td><td><span style="background:'+(d.severity==='major'?'#fee2e2':d.severity==='moderate'?'#fef3c7':'#dcfce7')+';padding:.2rem .5rem;border-radius:4px;font-size:.75rem">'+d.severity+'</span></td></tr>').join('') : '<tr><td colspan="4">No results</td></tr>';
+}
+
+function addDisease() {
+  const name = document.getElementById('new-disease-name').value.trim();
+  const symptoms = document.getElementById('new-disease-symptoms').value.split(',').map(s => s.trim());
+  const remedies = document.getElementById('new-disease-remedies').value.trim();
+  const prescriptions = document.getElementById('new-disease-prescriptions').value.trim();
+  const severity = document.getElementById('new-disease-severity').value;
+  if (!name || !symptoms || !remedies || !prescriptions) { toast('Fill all fields'); return; }
+  DISEASES.push({ name, symptoms, remedies, prescriptions, severity });
+  document.getElementById('lib-count').textContent = DISEASES.length;
+  renderDiseases();
+  toast('Disease added!');
+  document.getElementById('new-disease-name').value = '';
+  document.getElementById('new-disease-symptoms').value = '';
+  document.getElementById('new-disease-remedies').value = '';
+  document.getElementById('new-disease-prescriptions').value = '';
 }
 </script>
 </body>
