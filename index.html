@@ -403,63 +403,89 @@ const DISEASES = [
 {name:"PLMD",symptoms:["leg movements during sleep"],remedies:"Sleep study.",prescriptions:"Dopamine.",severity:"minor"}
 ];
 
-// Supabase functions
-async function supabaseCall(table, options = {}) {
-  const url = SUPABASE_URL + '/rest/v1/' + table;
-  const headers = { 
-    'apikey': SUPABASE_KEY, 
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
-    'Content-Type': 'application/json',
-    'Prefer': options.method === 'POST' ? 'return=representation' : 'return=minimal'
+// Simple storage using localStorage (works offline too)
+function db() {
+  return {
+    getUsers: () => JSON.parse(localStorage.getItem('aida_users') || '[]'),
+    setUsers: (users) => localStorage.setItem('aida_users', JSON.stringify(users)),
+    getUser: (email) => db().getUsers().find(u => u.email === email.toLowerCase()),
+    createUser: (name, email, password) => {
+      const users = db().getUsers();
+      const newUser = { id: 'usr_' + Date.now(), name, email: email.toLowerCase(), password, created_at: new Date().toISOString(), msg_count: 0 };
+      users.push(newUser);
+      db().setUsers(users);
+      return newUser;
+    },
+    getChats: () => JSON.parse(localStorage.getItem('aida_chats') || '[]'),
+    setChats: (chats) => localStorage.setItem('aida_chats', JSON.stringify(chats)),
+    saveChat: (userId, message, response, diagnosis) => {
+      const chats = db().getChats();
+      chats.push({ user_id: userId, message, response, diagnosis, created_at: new Date().toISOString() });
+      db().setChats(chats);
+    },
+    getStats: () => {
+      const s = JSON.parse(localStorage.getItem('aida_stats') || '{"visits":0,"msgs":0}');
+      return s;
+    },
+    incVisits: () => {
+      const s = db().getStats();
+      s.visits = (s.visits || 0) + 1;
+      localStorage.setItem('aida_stats', JSON.stringify(s));
+    },
+    incMsgs: () => {
+      const s = db().getStats();
+      s.msgs = (s.msgs || 0) + 1;
+      localStorage.setItem('aida_stats', JSON.stringify(s));
+    }
   };
-  const opts = { method: options.method || 'GET', headers };
-  if (options.body) opts.body = JSON.stringify(options.body);
-  const res = await fetch(url, opts);
-  if (res.status >= 400) {
-    const err = await res.text();
-    console.error('Supabase error:', res.status, err);
-    return options.method === 'POST' ? null : [];
-  }
-  if (options.method === 'POST') {
-    try { return await res.json(); } catch { return { id: Date.now() }; }
-  }
-  try { return await res.json(); } catch { return []; }
+}
+
+// Try Supabase, fall back to localStorage
+let useLocal = false;
+
+async function getUser(email) {
+  if (useLocal) return db().getUser(email);
+  try {
+    const users = await supabaseCall('users?email=eq.' + encodeURIComponent(email));
+    return users[0] || null;
+  } catch { useLocal = true; return db().getUser(email); }
 }
 
 async function createUser(name, email, password) {
-  // First check if user exists
-  const existing = await getUser(email);
-  if (existing) return null;
-  // Create new user using upsert
-  return await supabaseCall('users', { method: 'POST', body: { name, email, password } });
-}
-
-async function getUser(email) {
-  const users = await supabaseCall('users?email=eq.' + encodeURIComponent(email));
-  return users[0] || null;
+  if (useLocal) return db().createUser(name, email, password);
+  try {
+    const existing = await getUser(email);
+    if (existing) return null;
+    return await supabaseCall('users', { method: 'POST', body: { name, email, password } });
+  } catch { useLocal = true; return db().createUser(name, email, password); }
 }
 
 async function getAllUsers() {
-  return await supabaseCall('users?order=created_at.desc');
+  if (useLocal) return db().getUsers();
+  try { return await supabaseCall('users?order=created_at.desc'); } catch { return db().getUsers(); }
 }
 
 async function getStats() {
-  const stats = await supabaseCall('stats?id=eq.1');
-  return stats[0] || { visits: 0, total_messages: 0 };
+  if (useLocal) return db().getStats();
+  try { const stats = await supabaseCall('stats?id=eq.1'); return stats[0] || { visits: 0, total_messages: 0 }; } catch { return db().getStats(); }
 }
 
-async function updateStats(incVisits = false, incMsgs = false) {
-  const current = await getStats();
-  const updates = {};
-  if (incVisits) updates.visits = (current.visits || 0) + 1;
-  if (incMsgs) updates.total_messages = (current.total_messages || 0) + 1;
-  if (Object.keys(updates).length > 0) {
-    await supabaseCall('stats', { method: 'PATCH', body: updates });
-  }
+async function updateStats(incVisits, incMsgs) {
+  if (useLocal) { if (incVisits) db().incVisits(); if (incMsgs) db().incMsgs(); return; }
+  try {
+    const current = await getStats();
+    const updates = {};
+    if (incVisits) updates.visits = (current.visits || 0) + 1;
+    if (incMsgs) updates.total_messages = (current.total_messages || 0) + 1;
+    if (Object.keys(updates).length > 0) {
+      await supabaseCall('stats', { method: 'PATCH', body: updates });
+    }
+  } catch { if (incVisits) db().incVisits(); if (incMsgs) db().incMsgs(); }
 }
 
 async function saveChat(userId, message, response, diagnosis) {
-  await supabaseCall('chats', { method: 'POST', body: { user_id: userId, message, response, diagnosis } });
+  if (useLocal) { db().saveChat(userId, message, response, diagnosis); return; }
+  try { await supabaseCall('chats', { method: 'POST', body: { user_id: userId, message, response, diagnosis } }); } catch { db().saveChat(userId, message, response, diagnosis); }
 }
 
 async function getChats(userId) {
