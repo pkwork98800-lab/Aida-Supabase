@@ -1115,22 +1115,17 @@ function scoreDiseases(userText, mentionedSymptoms){
 }
 const GREETINGS = ["hi","hello","hey","yo","greetings","hola","good morning","good evening"];
 function isGreeting(t){return GREETINGS.some(g=>t.toLowerCase().trim().startsWith(g));}
-
 function greet(){
   const userName = state.user ? state.user.name : 'there';
-  addBot("<b>Hello, I'm Dr. Aida</b> — your AI health assistant. I'll ask you a few questions to help assess your condition.<br><br>Please describe your symptoms in detail. For example: <i>'I have a headache and fever since yesterday'</i> or <i>'Stomach pain and nausea for 3 days'</i>.<div class='quick-chips'><span class='chip' onclick=\"useChip('I have a sore throat and runny nose')\">Sore throat & runny nose</span><span class='chip' onclick=\"useChip('Severe headache and nausea')\">Headache & nausea</span><span class='chip' onclick=\"useChip('Stomach pain and bloating')\">Stomach pain</span></div><div class='disclaimer'>⚠️ I'm an educational prototype — always consult a licensed physician for medical advice.</div>");
   addBot("Good " + getTimeOfDay() + ", " + userName + ". I'm Dr. Aida, an internal medicine physician. How can I help you today?<br><br>Please tell me — what symptoms are you experiencing, and how long have you had them?<div class='quick-chips'><span class='chip' onclick=\"useChip('I have a fever and sore throat')\">Fever & sore throat</span><span class='chip' onclick=\"useChip('I have a headache and body ache')\">Headache & body ache</span><span class='chip' onclick=\"useChip('I have stomach pain and nausea')\">Stomach pain & nausea</span></div><div class='disclaimer'>⚠️ I'm an AI health assistant — always consult a licensed physician for medical advice.</div>");
 }
-
 function getTimeOfDay(){
   const h = new Date().getHours();
   if(h<12) return "morning";
   if(h<17) return "afternoon";
   return "evening";
 }
-
 window.useChip = (txt)=>{document.getElementById('chat-input').value=txt; sendMessage(new Event('submit'));};
-
 function sendMessage(e){
   if(e) e.preventDefault();
   if (!state.user) {
@@ -1143,24 +1138,17 @@ function sendMessage(e){
   if(!txt) return;
   addUser(txt);
   inp.value='';
-  // Track message in MongoDB
   MongoDB.incrementMsgCount(state.user.email);
   MongoDB.incrementMsgs();
-  setTimeout(()=>processBot(txt), 600);
   setTimeout(()=>processBot(txt), 700);
 }
 window.sendMessage = sendMessage;
-
 function processBot(txt){
-  if(isGreeting(txt) && state.currentSession.length<=2){
-    addBot("Hello! I'm Dr. Aida. To help assess your condition, please describe your symptoms in detail — what are you experiencing and for how long?");
   if(isGreeting(txt) && state.currentSession.length<=3){
     addBot("Hello! I'm Dr. Aida, an internal medicine physician. How can I help you today?<br><br>Please tell me — what symptoms are you experiencing, and how long have you had them?");
     return;
   }
-
   if(!state.pendingDx){
-    state.pendingDx = {mentioned:[], asked:0, lastQuestion:null, duration:null};
     state.pendingDx = {
       mentioned:[], 
       asked:0, 
@@ -1173,34 +1161,24 @@ function processBot(txt){
       allSymptoms:[]
     };
   }
-
   const normalized = txt.toLowerCase();
-
   if(state.pendingDx.lastQuestion){
     handleAnswer(txt, normalized);
     return;
   }
-
   if(state.pendingDx.phase === 'initial'){
     handleInitialPhase(txt, normalized);
     return;
   }
-  state.pendingDx.mentioned.push(...tokenize(txt));
-
-  if(state.pendingDx.lastQuestion && state.pendingDx.lastQuestion.type === 'duration'){
-    const days = txt.match(/\d+/);
-    if(days){
-      state.pendingDx.duration = parseInt(days[0]);
   if(state.pendingDx.phase === 'followup'){
     handleFollowupPhase(txt, normalized);
     return;
   }
 }
-
 function handleInitialPhase(txt, normalized){
   const tokens = tokenize(txt);
   state.pendingDx.mentioned.push(...tokens);
-
+  
   const durationMatch = txt.match(/(\d+)\s*(day|week|month|year)s?\s*(old|later|ago|since)?/i) || txt.match(/(since|yesterday|last)\s*(\d+\s*(day|week|month))?/i) || txt.match(/(\d+)\s*-\s*\d+\s*days?/);
   if(durationMatch){
     const numMatch = txt.match(/\d+/);
@@ -1210,12 +1188,7 @@ function handleInitialPhase(txt, normalized){
       if(/month/i.test(txt)) state.pendingDx.duration *= 30;
       if(/year/i.test(txt)) state.pendingDx.duration *= 365;
     }
-    state.pendingDx.lastQuestion = null;
   }
-    const yes = /\b(yes|yeah|yep|y|sometimes|often|a bit|kinda)\b/i.test(txt);
-    if(yes){
-      state.pendingDx.mentioned.push(...state.pendingDx.lastQuestion.symptom.split(' '));
-
   const durationPatterns = [
     /just\s*now/i,/an?\s*hour/i,/few\s*hours/i,
     /today/i,/yesterday/i,/last\s*(two|three|four|few)\s*days/i,
@@ -1234,49 +1207,34 @@ function handleInitialPhase(txt, normalized){
       }
       break;
     }
-    state.pendingDx.lastQuestion = null;
   }
-
   state.pendingDx.primaryComplaint = txt;
-
   const redFlag = detectRedFlag(normalized);
   if(redFlag){
     state.pendingDx.phase = 'redflag';
     addBot(redFlag);
     return;
   }
-
   const ranked = scoreDiseases(txt, state.pendingDx.mentioned);
   const top = ranked[0];
-
-  if(top.score < 0.15){
-    addBot("I need more information to provide an assessment. Please describe your symptoms more specifically — for example: where does it hurt, how long have you had symptoms, any fever or fatigue?");
   if(top.score < 0.12){
     addBot("I understand. Could you please describe your symptoms more specifically?<br><br>For example:<br>• Where exactly do you feel pain or discomfort?<br>• How long have you had this?<br>• Is there any fever, vomiting, or other symptoms along with it?<div class='quick-chips'><span class='chip' onclick=\"useChip('I have fever and headache since yesterday')\">Fever & headache since yesterday</span><span class='chip' onclick=\"useChip('I have stomach pain for 3 days')\">Stomach pain for 3 days</span><span class='chip' onclick=\"useChip('Cough and cold for a week')\">Cough and cold for a week</span></div>");
     return;
   }
-
-  const confidence = Math.min(0.98, top.score * 0.7 + (top.matched.length/6)*0.3);
   state.pendingDx.phase = 'followup';
   state.pendingDx.disease = top.disease;
   state.pendingDx.matched = top.matched;
-
-  if((confidence >= 0.7 || state.pendingDx.asked >= 3) && !state.pendingDx.duration){
-    state.pendingDx.lastQuestion = {type:'duration', symptom:'duration'};
-    addBot("One more question before I give my assessment — <b>how many days have you had these symptoms?</b> <div class='quick-chips'><span class='chip' onclick=\"useChip('2 days')\">2 days</span><span class='chip' onclick=\"useChip('5 days')\">5 days</span><span class='chip' onclick=\"useChip('1 week')\">1 week</span><span class='chip' onclick=\"useChip('2 weeks')\">2 weeks</span></div>");
-    return;
   state.pendingDx.asked = 0;
   state.pendingDx.questionsToAsk = getNextQuestions(top, state.pendingDx.mentioned);
   askNextQuestion();
 }
-
 function getNextQuestions(top, mentioned){
   const disease = top.disease;
   const questions = [];
-
+  
   const allSymptoms = disease.symptoms.map(s => s.toLowerCase());
   const mentionedLower = mentioned.map(s => s.toLowerCase());
-
+  
   if(!mentionedLower.some(m => /fever|pyrexia|temperature|hot/i.test(m))){
     questions.push({q:"Do you have fever? If yes, have you measured your temperature?", symptom:"fever", key:"fever"});
   }
@@ -1301,12 +1259,8 @@ function getNextQuestions(top, mentioned){
   if(!mentionedLower.some(m => /appetite|eat|weight/i.test(m))){
     questions.push({q:"Has your appetite been normal? Any weight loss?", symptom:"appetite", key:"appetite"});
   }
-
   return questions.slice(0, 5);
 }
-
-  if(confidence >= 0.7 || state.pendingDx.asked >= 3){
-    finalDiagnosis(top, confidence);
 function askNextQuestion(){
   const q = state.pendingDx.questionsToAsk[state.pendingDx.asked];
   if(!q){
@@ -1318,15 +1272,11 @@ function askNextQuestion(){
   const total = state.pendingDx.questionsToAsk.length;
   addBot("<b>Question " + questionNum + " of " + total + ":</b><br>" + q.q + "<div class='quick-chips'><span class='chip' onclick=\"useChip('Yes')\">Yes</span><span class='chip' onclick=\"useChip('No')\">No</span></div>");
 }
-
-  const unmentioned = top.disease.symptoms.filter(s=>!top.matched.includes(s));
-  if(unmentioned.length===0){
-    finalDiagnosis(top, confidence);
 function handleAnswer(txt, normalized){
   const q = state.pendingDx.lastQuestion;
   const yes = /\b(yes|yeah|yep|y|sometimes|often|a bit|kinda|have|having|i\s+do|i\s+have)/i.test(txt);
   const no = /\b(no|nope|not|none|never|i\s+don'?t\s+have|don'?t\s+have|haven?t)/i.test(txt);
-
+  
   if(q.key === 'severity'){
     const num = txt.match(/\d+/);
     if(num) state.pendingDx.severity = parseInt(num[0]);
@@ -1376,53 +1326,26 @@ function handleAnswer(txt, normalized){
       state.pendingDx.matched.push(q.symptom);
     }
   }
-  const askSym = unmentioned[0];
-  state.pendingDx.lastQuestion = {symptom: askSym};
-
   state.pendingDx.lastQuestion = null;
   state.pendingDx.asked++;
-  const phrasings = [
-    "Thank you. Are you also experiencing <b>" + askSym + "</b>? (yes/no)",
-    "One more question — do you have <b>" + askSym + "</b>?",
-    "To confirm, have you noticed <b>" + askSym + "</b> as well?",
-  ];
-  addBot(phrasings[state.pendingDx.asked % 3] + " <div class='quick-chips'><span class='chip' onclick=\"useChip('Yes')\">Yes</span><span class='chip' onclick=\"useChip('No')\">No</span></div>");
-
   if(state.pendingDx.asked >= state.pendingDx.questionsToAsk.length){
     askDuration();
   } else {
     askNextQuestion();
   }
 }
-
 function askDuration(){
   state.pendingDx.phase = 'duration';
   state.pendingDx.lastQuestion = {q:"How many days have you had these symptoms?", symptom:"duration", key:"duration"};
   addBot("How many days have you had these symptoms?<br><br><div class='quick-chips'><span class='chip' onclick=\"useChip('Just today - started today')\">Just today</span><span class='chip' onclick=\"useChip('Since yesterday')\">Since yesterday</span><span class='chip' onclick=\"useChip('3 days')\">3 days</span><span class='chip' onclick=\"useChip('5 to 7 days')\">5-7 days</span><span class='chip' onclick=\"useChip('More than a week')\">More than a week</span></div>");
 }
-
-function finalDiagnosis(top, conf){
-  const d = top.disease;
 function giveFinalAdvice(){
   const d = state.pendingDx.disease;
   const days = state.pendingDx.duration || 3;
   const sevColor = d.severity==='major'?'pill-red':d.severity==='moderate'?'pill-blue':'pill-green';
-
-  let durationNote = '';
-  if(state.pendingDx && state.pendingDx.duration){
-    const days = state.pendingDx.duration;
-    if(days <= 2){
-      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms are recent (' + days + ' day(s)). This appears to be an early-stage presentation. Please monitor closely and consult a doctor if symptoms worsen.</div>';
-    } else if(days <= 7){
-      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have persisted for ' + days + ' day(s). If not improving, please seek medical attention.</div>';
-    } else if(days <= 14){
-      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have lasted ' + days + ' days. Prolonged symptoms warrant a professional check-up.</div>';
-    } else {
-      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have persisted for ' + days + ' days (2+ weeks). <span style="color:var(--danger);font-weight:600">Please consult a doctor immediately.</span></div>';
   const matchedCount = (state.pendingDx.matched || []).length;
   const totalSymptoms = d.symptoms.length;
   const matchPct = Math.round((matchedCount / totalSymptoms) * 100);
-
   let durationAdvice = getDurationAdvice(d.name, days);
   let severityNote = '';
   if(state.pendingDx.severity){
@@ -1430,28 +1353,15 @@ function giveFinalAdvice(){
       severityNote = '<div class="dx-section"><b>⚠️ Pain Severity</b>You rated your pain/discomfort at ' + state.pendingDx.severity + '/10, which is quite significant. Please ensure you take proper rest and if it worsens, see a doctor.</div>';
     }
   }
-
-  const html = "Based on your symptoms, my best assessment is:" +
-    "<div class=\"diagnosis-card\">" +
-      "<div class=\"dx-head\">" +
-
   const html = 
     "<b>Here's my assessment, based on what you've told me:</b><br><br>" +
     "<div class='diagnosis-card'>" +
       "<div class='dx-head'>" +
         "<div>" +
-          "<div class=\"dx-name\">" + d.name + "</div>" +
-          "<div><span class=\"pill " + sevColor + "\">" + d.severity.toUpperCase() + "</span> · matched " + top.matched.length + "/" + d.symptoms.length + " symptoms</div>" +
           "<div class='dx-name'>Most Likely: " + d.name + "</div>" +
           "<div><span class='pill " + sevColor + "'>" + d.severity.toUpperCase() + "</span> · Matched " + matchedCount + "/" + totalSymptoms + " symptoms (" + matchPct + "% match)</div>" +
         "</div>" +
-        "<span class=\"conf\">" + Math.round(conf*100) + "% confidence</span>" +
       "</div>" +
-        "<div class=\"dx-section\"><b>Common Symptoms</b>" + d.symptoms.join(' • ') + "</div>" +
-        durationNote +
-        "<div class=\"dx-section\"><b>🍵 Home Remedies</b>" + d.remedies + "</div>" +
-      "<div class=\"dx-section\"><b>💊 Generic Prescriptions</b>" + d.prescriptions + "</div>" +
-      "<div class=\"disclaimer\">⚠️ This is an AI-assisted suggestion, not a medical diagnosis. Please consult a licensed pharmacist or doctor for body-specific confirmation before taking any medication.</div>" +
       "<div class='dx-section'><b>Your Symptoms</b>" + state.pendingDx.primaryComplaint + "</div>" +
       "<div class='dx-section'><b>📅 Duration</b>" + days + " day(s)</div>" +
       durationAdvice +
@@ -1462,7 +1372,6 @@ function giveFinalAdvice(){
       "<div class='dx-section'><b>🚨 Red Flags — See a Doctor Immediately If:</b>Sudden worsening of symptoms · High fever not responding to medicine · Difficulty breathing · Severe pain · Blood in vomit or stool · Confusion · Unable to eat or drink · Symptoms lasting beyond recommended duration</div>" +
       "<div class='disclaimer'>⚠️ This is an AI-assisted assessment, not a substitute for professional medical diagnosis. Please consult a licensed physician for personalized medical advice.</div>" +
     "</div>" +
-    "<div style=\"margin-top:.8rem;font-size:.9rem\">Would you like to start a <a href=\"#\" onclick=\"newChat();return false;\" style=\"color:var(--primary);font-weight:600\">new check-up</a>?</div>";
     "<div style='margin-top:.8rem'>" +
       "To summarize: You likely have <b>" + d.name + "</b>. " +
       "Follow the treatment plan above for <b>" + getTreatmentDuration(d.name, days) + ".</b> " +
@@ -1470,88 +1379,82 @@ function giveFinalAdvice(){
       "Is there anything else you're experiencing or worried about?<br>" +
       "<div class='quick-chips'><span class='chip' onclick=\"useChip('No, thats all for now')\">No, that's all</span><span class='chip' onclick=\"useChip('I have another concern')\">I have another concern</span></div>" +
     "</div>";
-
   addBot(html);
   state.history.unshift({title: d.name, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
   renderHistory();
-  state.pendingDx = null;
   state.pendingDx.lastQuestion = {q:"Is there anything else?", symptom:"", key:"worried_about"};
   state.pendingDx.phase = 'done';
 }
-
 function getDurationAdvice(diseaseName, days){
   const name = diseaseName.toLowerCase();
-
+  
   if(name.includes('cold') || name.includes('flu') || name.includes('influenza')){
     if(days <= 2) return "<div class='dx-section'><b>📋 Day 1-2 Plan</b>Rest completely · Drink 2-3 liters of warm water/fluids daily · Tab. Paracetamol 500mg every 6 hours for fever/body ache · Steam inhalation 2x/day · Ginger-lemon-honey tea 3x/day · Light, nutritious food · Monitor temperature every 4 hours.</div>";
     if(days <= 5) return "<div class='dx-section'><b>📋 Day 3-5 Plan</b>Continue rest and fluids · Tab. Paracetamol 650mg every 6 hours if fever persists · Tab. Cetirizine 10mg at night for congestion · Warm soups and ORS solution · If fever lasts beyond 5 days, please get CBC and malaria/dengue test done.</div>";
     return "<div class='dx-section'><b>📋 Day 5+ Plan</b>Prolonged flu-like illness needs investigation. Please get: CBC, CRP, Dengue NS1/Malaria test, and chest X-ray if cough is present. Consult a physician — do not delay.</div>";
   }
-
+  
   if(name.includes('dengue')){
     return "<div class='dx-section'><b>📋 Dengue Management</b>Complete rest is mandatory · Tab. Paracetamol 500mg ONLY — never use Aspirin or Ibuprofen · Papaya leaf juice 2x/day · 3+ liters of water daily · Monitor platelet count every alternate day · Rest for 2 weeks minimum even after fever subsides · Warning signs: bleeding gums, skin rash, severe abdominal pain — go to ER immediately.</div>";
   }
-
+  
   if(name.includes('malaria')){
     return "<div class='dx-section'><b>📋 Malaria Management</b>URGENT: Please get blood smear and rapid antigen test immediately · While waiting for results, take Tab. Paracetamol 500mg for fever · Drink plenty of fluids · Do not take any medicine containing Aspirin · If test is positive, a doctor will prescribe Artemisinin-based combination therapy (ACT) — complete the full course even if you feel better.</div>";
   }
-
+  
   if(name.includes('gastritis') || name.includes('acid') || name.includes('reflux')){
     if(days <= 3) return "<div class='dx-section'><b>📋 Day 1-3 Plan</b>Eat small, frequent meals · Avoid spicy, oily, and acidic foods · No coffee/tea/alcohol · Drink cold milk for immediate relief · Tab. Pantoprazole 40mg empty stomach in the morning · Avoid lying down immediately after eating · Raise head of bed by 6 inches.</div>";
     return "<div class='dx-section'><b>📋 Extended Acid Reflux</b>If symptoms persist beyond 1 week despite medication, please consult a gastroenterologist. You may need an endoscopy. Continue Pantoprazole 40mg daily before breakfast. Avoid trigger foods completely.</div>";
   }
-
+  
   if(name.includes('migrane') || name.includes('headache')){
     if(days <= 1) return "<div class='dx-section'><b>📋 Migraine/Headache Plan</b>Rest in a dark, quiet room · Cold compress on forehead · Tab. Ibuprofen 400mg at first sign of headache · Tab. Sumatriptan 50mg if prescribed by doctor · Avoid screens, loud noises, and strong smells · Identify and avoid triggers (cheese, chocolate, stress, sleep deprivation).</div>";
     return "<div class='dx-section'><b>📋 Persistent Headache</b>If you have had headaches for more than 2 weeks or if they are getting worse, please get: CBC, MRI brain, and eye examination. Consult a neurologist. Track your headaches — when they occur, duration, triggers, and severity.</div>";
   }
-
+  
   if(name.includes('diarrhea')){
     if(days <= 2) return "<div class='dx-section'><b>📋 Day 1-2 Plan</b>ORS solution (1 packet in 1 liter water) — sip frequently · BRAT diet: Bananas, Rice, Applesauce, Toast · Avoid dairy, oily food, and raw vegetables · Tab. Loperamide 2mg after each loose stool (max 8mg/day) · Probiotic capsule 1x/day · Monitor for signs of dehydration.</div>";
     return "<div class='dx-section'><b>📋 Prolonged Diarrhea</b>If diarrhea persists beyond 5 days, please get: Stool routine and culture, CBC, and electrolytes. If there is blood in stool, fever, or severe abdominal pain — see a doctor immediately. Do not take antibiotics without prescription.</div>";
   }
-
+  
   if(name.includes('typhoid')){
     return "<div class='dx-section'><b>📋 Typhoid Management</b>Complete rest is essential · Only eat thoroughly cooked, bland food · Drink only boiled/filtered water · Tab. Azithromycin 500mg 1x daily for 5 days OR as prescribed · Tab. Paracetamol for fever · Avoid NSAIDs (Ibuprofen) — they can cause gut bleeding · Get a follow-up typhoid test after 1 week to confirm clearance.</div>";
   }
-
+  
   return "<div class='dx-section'><b>📋 General Care Plan for " + days + " Days</b>" + getGeneralCare(days) + "</div>";
 }
-
 function getGeneralCare(days){
   if(days <= 2) return "Rest well · Drink plenty of fluids · Eat light, nutritious food · Take Tab. Paracetamol 500-650mg every 6 hours if you have fever or pain · Monitor your symptoms — if they worsen or new symptoms appear, please consult a doctor.";
   if(days <= 5) return "Continue rest · Maintain good hydration · Take medicines as directed · If symptoms are not improving, please get basic tests (CBC) done · Watch for warning signs: high fever, severe pain, vomiting, or new symptoms.";
   if(days <= 14) return "Your symptoms have lasted over a week. I recommend: CBC, CRP, and any organ-specific tests based on your symptoms. Please see a doctor in person for a thorough examination. Continue supportive care.";
   return "Your symptoms have persisted for more than 2 weeks. Please see a physician immediately for a comprehensive evaluation, blood tests, and possibly imaging studies. Do not self-medicate.";
 }
-
 function getTestAdvice(diseaseName, days){
   const name = diseaseName.toLowerCase();
-
+  
   if(name.includes('cold') || name.includes('flu') || name.includes('influenza')){
     if(days >= 5) return "CBC (complete blood count) to check for infection · Rapid influenza test if available · If fever persists >5 days: Dengue NS1, Malaria smear, and COVID test";
     return "Usually not needed for common cold within first 3-4 days. Get tested only if fever is high or symptoms worsen.";
   }
-
+  
   if(name.includes('dengue')) return "CBC with platelet count (alternate days) · Dengue NS1 antigen (within 5 days of fever) · IgM/IgG antibodies (after day 5) · Liver function test · Monitor platelet count — if below 50,000, hospital admission needed.";
-
+  
   if(name.includes('malaria')) return "Peripheral blood smear for malaria parasite (gold standard) · Rapid malaria antigen test · CBC with thick and thin smear · If positive, get species identification before starting treatment.";
-
+  
   if(name.includes('typhoid')) return "Widal test (qualitative) · Typhoid IgM/IgG rapid test · Blood culture (gold standard) · Stool culture if carrier suspected · Liver function tests if on antibiotics.";
-
+  
   if(name.includes('gastritis') || name.includes('acid') || name.includes('reflux')){
     if(days >= 14) return "Upper GI endoscopy (to rule out ulcers, H. pylori) · Urea breath test for H. pylori · Abdominal ultrasound if pain is severe";
     return "Not usually needed within first 1-2 weeks. See a doctor if symptoms persist beyond 2 weeks or if you have blood in vomit or black stools.";
   }
-
+  
   if(name.includes('diarrhea')) {
     if(days >= 5) return "Stool routine and culture · CBC · Electrolytes (if dehydrated) · If blood in stool: colonoscopy or sigmoidoscopy";
     return "Usually not needed if diarrhea is mild and improving. Get tested if diarrhea is profuse, bloody, or persists beyond 5 days.";
   }
-
+  
   return "Basic tests recommended: CBC, CRP. Based on your specific symptoms, your doctor may recommend additional organ-specific tests.";
 }
-
 function getTreatmentDuration(diseaseName, days){
   const name = diseaseName.toLowerCase();
   if(name.includes('cold')) return "5-7 days for complete recovery";
@@ -1564,7 +1467,6 @@ function getTreatmentDuration(diseaseName, days){
   if(name.includes('migrane') || name.includes('headache')) return "as needed for acute episodes, or as prescribed for preventive";
   return "7-14 days or as symptoms dictate";
 }
-
 function detectRedFlag(normalized){
   const redFlags = [
     {pattern: /chest\s*pain|chest\s*pressure|chest\s*tightness|heart\s*pain/i, msg:"<b>⚠️ EMERGENCY WARNING</b><br>This could be a heart-related emergency.<br><br>Please go to the <b>nearest emergency room immediately</b> if you are experiencing chest pain, pressure, or tightness — especially if it radiates to your arm, jaw, or back.<br><br>Do not wait. Call emergency services or have someone take you to the hospital right now.<br><br>Is there anyone with you who can take you to the hospital?"},
@@ -1579,7 +1481,6 @@ function detectRedFlag(normalized){
     {pattern: /suicidal|want\s*to\s*die|kill\s*myself|end\s*my\s*life/i, msg:"<b>I'm very concerned about you.</b><br><br>If you're having thoughts of harming yourself, please reach out for support:<br><br>🛡️ <b>National Suicide Prevention Lifeline:</b> 988 (US)<br>🛡️ <b>Crisis Text Line:</b> Text HOME to 741741<br><br>Please tell someone you trust — a family member, friend, or healthcare provider — and seek help immediately. You are not alone."},
     {pattern: /blood\s*cancer|leukemia|lymphoma/i, msg:"That's a serious concern. Let me ask you some important questions to properly assess this risk.<br><br>Have you noticed any of the following: unexplained weight loss, night sweats, easy bruising or bleeding, prolonged fever not responding to medication, swollen lymph nodes, bone pain, or extreme fatigue that doesn't improve with rest?"}
   ];
-
   for(const flag of redFlags){
     if(flag.pattern.test(normalized)){
       if(flag.pattern.source.includes('blood\\s*cancer|leukemia|lymphoma')){
@@ -1590,7 +1491,6 @@ function detectRedFlag(normalized){
   }
   return null;
 }
-
 function getSeriousConcernQuestion(type){
   const questions = [
     {q:"Have you experienced <b>unexplained weight loss</b> (more than 5kg without diet or exercise)?", key:"weightloss"},
@@ -1602,14 +1502,11 @@ function getSeriousConcernQuestion(type){
   ];
   return questions[Math.floor(Math.random() * questions.length)];
 }
-
 function handleFollowupPhase(txt, normalized){
   state.pendingDx.phase = 'initial';
   handleInitialPhase(txt, normalized);
 }
-
 function renderHistory(){
-
 function renderHistory(){
   const list = document.getElementById('history-list');
   list.innerHTML = state.history.slice(0,12).map(h=>"<div class=\"history-item\"><i class=\"bi bi-clipboard2-pulse\"></i><div><div>" + h.title + "</div><div style=\"font-size:.72rem;color:var(--muted)\">" + h.time + "</div></div></div>").join('') || '<div style="color:var(--muted);font-size:.85rem;padding:.5rem .8rem">No previous chats</div>';
@@ -2202,32 +2099,33 @@ window.logout = async function() {
   showView('landing');
   showToast('👋 Logged out successfully');
 };
+
 window.sendMessage = async function(e) {
   if (e && e.preventDefault) {
     e.preventDefault();
   }
   console.log('sendMessage called, state.user:', state.user);
-  
+
   if (!state.user) {
     showToast('Please login first');
     showView('login');
     return;
   }
-  
+
   const input = document.getElementById('chat-input');
   if (!input) {
     console.error('chat-input element not found');
     return;
   }
-  
+
   const msg = input.value.trim();
   if (!msg) {
     console.log('empty message, returning');
     return;
   }
-  
+
   console.log('Sending message:', msg);
-  
+
   // Add user message to chat
   const msgDiv = document.getElementById('messages');
   if (msgDiv) {
@@ -2235,28 +2133,28 @@ window.sendMessage = async function(e) {
     msgDiv.insertAdjacentHTML('beforeend', '<div class="msg user"><div class="av">' + initial + '</div><div class="bubble">' + escapeHtml(msg) + '</div></div>');
     msgDiv.scrollTop = msgDiv.scrollHeight;
   }
-  
+
   input.value = '';
-  
+
   // Show typing indicator
   const tid = 'typ'+Date.now();
   if (msgDiv) {
     msgDiv.insertAdjacentHTML('beforeend', '<div class="msg bot" id="' + tid + '"><div class="av"><i class="bi bi-heart-pulse-fill"></i></div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>');
     msgDiv.scrollTop = msgDiv.scrollHeight;
   }
-  
+
   try {
     console.log('Calling API.chat...');
     const data = await API.chat(msg);
     console.log('API response:', data);
-    
+
     // Replace typing with bot response
     const el = document.getElementById(tid);
     if (el) {
       el.querySelector('.bubble').innerHTML = data.message;
       msgDiv.scrollTop = msgDiv.scrollHeight;
     }
-    
+
     if (data.type === 'diagnosis') {
       const quickActions = document.querySelector('.quick-chips');
       if (quickActions) {
@@ -2268,16 +2166,18 @@ window.sendMessage = async function(e) {
     addMessage('Error: ' + e.message, 'bot');
   }
 };
+
 window.sendQuickMessage = async function(msg) {
   document.getElementById('chat-input').value = msg;
   sendMessage(new Event('submit'));
 };
+
 window.doAdminLogin = async function(e) {
   e.preventDefault();
   const userEl = document.getElementById('admin-login-user');
   const passEl = document.getElementById('admin-login-pass');
   const errEl = document.getElementById('admin-login-error');
-  
+
   try {
     const data = await API.adminLogin(userEl.value, passEl.value);
     if (data.success) {
@@ -2293,6 +2193,7 @@ window.doAdminLogin = async function(e) {
     errEl.classList.add('show');
   }
 };
+
 window.adminLogout = async function() {
   try {
     await API.adminLogout();
@@ -2302,6 +2203,7 @@ window.adminLogout = async function() {
   showView('landing');
   showToast('👋 Admin logged out');
 };
+
 async function updateAdminStats() {
   if (!state.adminAuth) return;
   try {
@@ -2314,6 +2216,7 @@ async function updateAdminStats() {
     console.log('Could not update admin stats');
   }
 }
+
 async function loadAdminData() {
   if (!state.adminAuth) return;
   try {
@@ -2323,10 +2226,10 @@ async function loadAdminData() {
       API.chartMessages(),
       API.chartDiseases()
     ]);
-    
+
     state.adminUsers = userData.users || [];
     state.adminDiseases = diseaseData.diseases || [];
-    
+
     renderUsersTable(state.adminUsers);
     buildLibraryFromData(state.adminDiseases);
     renderCharts(msgChart, diseaseChart);
@@ -2334,22 +2237,23 @@ async function loadAdminData() {
     console.log('Could not load admin data');
   }
 }
+
 window.extractDisease = async function() {
   if (!state.adminAuth) return;
   const text = document.getElementById('raw-disease').value;
   if (!text) return;
-  
+
   const nameMatch = text.match(/Name:\s*(.+?)(?:\n|$)/i);
   const symptomsMatch = text.match(/Symptoms?:\s*(.+?)(?:\n\n|Prescriptions:|$)|$/i);
   const remediesMatch = text.match(/Remedies?:\s*(.+?)(?:\n\n|Prescriptions:|$)|$/i);
   const prescMatch = text.match(/Prescriptions?:\s*(.+)$/i);
-  
+
   const name = nameMatch ? nameMatch[1].trim() : 'Unknown Disease';
   const symptoms = symptomsMatch ? symptomsMatch[1].split(/[,;]/).map(s => s.trim()).filter(s => s) : [];
   const remedies = remediesMatch ? remediesMatch[1].trim() : '';
   const prescriptions = prescMatch ? prescMatch[1].trim() : '';
   const severity = 'moderate';
-  
+
   try {
     await API.addDisease({ name, symptoms, remedies, prescriptions, severity });
     showToast('✅ ' + name + ' added to MongoDB!');
@@ -2359,29 +2263,32 @@ window.extractDisease = async function() {
     showToast('❌ Failed to add disease');
   }
 };
+
 function renderUsersTable(users) {
   const tbody = document.querySelector('#users-table tbody');
   if (!tbody) return;
-  
+
   tbody.innerHTML = users.map(u => 
     '<tr><td>' + u.email + '</td><td>' + (u.name || 'User') + '</td><td>' + new Date(u.created_at).toLocaleDateString() + '</td><td>' + u.chats_count + '</td><td><span class="pill pill-green">Active</span></td><td><button class="icon-btn del" onclick="deleteUser(\'' + u.id + '\')"><i class="bi bi-trash"></i></button></td></tr>'
   ).join('');
-  
+
   document.getElementById('user-count-label').textContent = users.length + ' users';
 }
+
 function buildLibraryFromData(diseases) {
   const tb = document.querySelector('#lib-table tbody');
   if (!tb) return;
-  
+
   document.getElementById('lib-count').textContent = diseases.length;
-  
+
   tb.innerHTML = diseases.map((d, i) => 
     '<tr><td>' + (i + 1) + '</td><td><b>' + d.name + '</b></td><td>' + d.symptoms.slice(0, 4).join(' • ') + '</td><td><span class="pill ' + (d.severity === 'major' ? 'pill-red' : d.severity === 'moderate' ? 'pill-blue' : 'pill-green') + '">' + d.severity + '</span></td><td><button class="icon-btn" onclick="viewDisease(\'' + d.id + '\')"><i class="bi bi-eye"></i></button><button class="icon-btn del" onclick="deleteDisease(\'' + d.id + '\')"><i class="bi bi-trash"></i></button></td></tr>'
   ).join('');
 }
+
 function renderCharts(msgData, diseaseData) {
   if (typeof Chart === 'undefined') return;
-  
+
   const msgCtx = document.getElementById('chart-msgs');
   if (msgCtx && window.msgChart) window.msgChart.destroy();
   if (msgCtx) {
@@ -2398,7 +2305,7 @@ function renderCharts(msgData, diseaseData) {
       options: { responsive: true, maintainAspectRatio: false }
     });
   }
-  
+
   const pieCtx = document.getElementById('chart-pie');
   if (pieCtx && window.pieChart) window.pieChart.destroy();
   if (pieCtx) {
@@ -2414,10 +2321,12 @@ function renderCharts(msgData, diseaseData) {
     });
   }
 }
+
 window.deleteUser = async function(id) {
   if (!state.adminAuth) return;
   showToast('Delete user: ' + id);
 };
+
 window.deleteDisease = async function(id) {
   if (!state.adminAuth) return;
   if (confirm('Delete this disease?')) {
@@ -2430,16 +2339,18 @@ window.deleteDisease = async function(id) {
     }
   }
 };
+
 window.viewDisease = function(id) {
   if (!state.adminAuth) return;
   openModal('<p>Disease ID: ' + id + '</p><button class="btn-ghost" onclick="closeModalForce()">Close</button>');
 };
+
 /* ============ INIT ============ */
 async function init() {
   // Set up chat input events
   const chatInput = document.getElementById('chat-input');
   const sendBtn = document.getElementById('send-btn');
-  
+
   if (chatInput) {
     chatInput.addEventListener('keydown', function(e) {
       console.log('Key pressed:', e.key, 'Shift:', e.shiftKey);
@@ -2456,14 +2367,14 @@ async function init() {
       }
     });
   }
-  
+
   if (sendBtn) {
     sendBtn.addEventListener('click', function(e) {
       e.preventDefault();
       window.sendMessage(e);
     });
   }
-  
+
   // Also test on form submit if there's a form
   const chatForm = document.querySelector('.chat-input-wrap');
   if (chatForm) {
@@ -2472,21 +2383,25 @@ async function init() {
       window.sendMessage(e);
     });
   }
-  
+
   renderHistory();
   await initBackendConnection();
-  
+
   if (state.user) {
     updateUserUI();
   }
-  
+
   if (sessionStorage.getItem('admin_auth') === 'true') {
     state.adminAuth = true;
     showView('admin');
     updateAdminStats();
     loadAdminData();
   }
+function showAuthError(id,msg){
+  const el=document.getElementById(id);
+  if(el){el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),4000);}
 }
+
 init();
 </script>
 </body>
