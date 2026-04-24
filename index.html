@@ -1199,7 +1199,7 @@ function isGreeting(t){return GREETINGS.some(g=>t.toLowerCase().trim().startsWit
 
 function greet(){
   const userName = state.user ? state.user.name : 'there';
-  addBot("👋 Hi <b>" + userName + "</b>! I'm <b>Aida</b>, your AI health companion. Tell me what symptoms you're experiencing — for example: <i>'I have a headache and fever for 2 days'</i>.<div class='quick-chips'><span class='chip' onclick=\"useChip('I have a sore throat and runny nose')\">Sore throat & runny nose</span><span class='chip' onclick=\"useChip('Severe headache and nausea')\">Headache & nausea</span><span class='chip' onclick=\"useChip('Stomach pain and bloating')\">Stomach pain</span></div><div class='disclaimer'>⚠️ I'm an educational prototype — always consult a licensed physician for medical advice.</div>");
+  addBot("<b>Hello, I'm Dr. Aida</b> — your AI health assistant. I'll ask you a few questions to help assess your condition.<br><br>Please describe your symptoms in detail. For example: <i>'I have a headache and fever since yesterday'</i> or <i>'Stomach pain and nausea for 3 days'</i>.<div class='quick-chips'><span class='chip' onclick=\"useChip('I have a sore throat and runny nose')\">Sore throat & runny nose</span><span class='chip' onclick=\"useChip('Severe headache and nausea')\">Headache & nausea</span><span class='chip' onclick=\"useChip('Stomach pain and bloating')\">Stomach pain</span></div><div class='disclaimer'>⚠️ I'm an educational prototype — always consult a licensed physician for medical advice.</div>");
 }
 window.useChip = (txt)=>{document.getElementById('chat-input').value=txt; sendMessage(new Event('submit'));};
 
@@ -1224,16 +1224,22 @@ window.sendMessage = sendMessage;
 
 function processBot(txt){
   if(isGreeting(txt) && state.currentSession.length<=2){
-    addBot("Hello! 😊 To help you, please describe your symptoms in detail. What's bothering you?");
+    addBot("Hello! I'm Dr. Aida. To help assess your condition, please describe your symptoms in detail — what are you experiencing and for how long?");
     return;
   }
 
   if(!state.pendingDx){
-    state.pendingDx = {mentioned:[], asked:0, lastQuestion:null};
+    state.pendingDx = {mentioned:[], asked:0, lastQuestion:null, duration:null};
   }
   state.pendingDx.mentioned.push(...tokenize(txt));
 
-  if(state.pendingDx.lastQuestion){
+  if(state.pendingDx.lastQuestion && state.pendingDx.lastQuestion.type === 'duration'){
+    const days = txt.match(/\d+/);
+    if(days){
+      state.pendingDx.duration = parseInt(days[0]);
+    }
+    state.pendingDx.lastQuestion = null;
+  }
     const yes = /\b(yes|yeah|yep|y|sometimes|often|a bit|kinda)\b/i.test(txt);
     if(yes){
       state.pendingDx.mentioned.push(...state.pendingDx.lastQuestion.symptom.split(' '));
@@ -1245,11 +1251,17 @@ function processBot(txt){
   const top = ranked[0];
 
   if(top.score < 0.15){
-    addBot("Hmm, I need a bit more info 🤔. Could you describe symptoms more specifically? For instance: where does it hurt, how long has it lasted, any fever or fatigue?");
+    addBot("I need more information to provide an assessment. Please describe your symptoms more specifically — for example: where does it hurt, how long have you had symptoms, any fever or fatigue?");
     return;
   }
 
   const confidence = Math.min(0.98, top.score * 0.7 + (top.matched.length/6)*0.3);
+
+  if((confidence >= 0.7 || state.pendingDx.asked >= 3) && !state.pendingDx.duration){
+    state.pendingDx.lastQuestion = {type:'duration', symptom:'duration'};
+    addBot("One more question before I give my assessment — <b>how many days have you had these symptoms?</b> <div class='quick-chips'><span class='chip' onclick=\"useChip('2 days')\">2 days</span><span class='chip' onclick=\"useChip('5 days')\">5 days</span><span class='chip' onclick=\"useChip('1 week')\">1 week</span><span class='chip' onclick=\"useChip('2 weeks')\">2 weeks</span></div>");
+    return;
+  }
 
   if(confidence >= 0.7 || state.pendingDx.asked >= 3){
     finalDiagnosis(top, confidence);
@@ -1265,9 +1277,9 @@ function processBot(txt){
   state.pendingDx.lastQuestion = {symptom: askSym};
   state.pendingDx.asked++;
   const phrasings = [
-    "Got it. Are you also experiencing <b>" + askSym + "</b>? (yes/no)",
-    "Thanks! Just to be sure — any <b>" + askSym + "</b>?",
-    "One more — would you say you have <b>" + askSym + "</b> as well?",
+    "Thank you. Are you also experiencing <b>" + askSym + "</b>? (yes/no)",
+    "One more question — do you have <b>" + askSym + "</b>?",
+    "To confirm, have you noticed <b>" + askSym + "</b> as well?",
   ];
   addBot(phrasings[state.pendingDx.asked % 3] + " <div class='quick-chips'><span class='chip' onclick=\"useChip('Yes')\">Yes</span><span class='chip' onclick=\"useChip('No')\">No</span></div>");
 }
@@ -1275,6 +1287,21 @@ function processBot(txt){
 function finalDiagnosis(top, conf){
   const d = top.disease;
   const sevColor = d.severity==='major'?'pill-red':d.severity==='moderate'?'pill-blue':'pill-green';
+  
+  let durationNote = '';
+  if(state.pendingDx && state.pendingDx.duration){
+    const days = state.pendingDx.duration;
+    if(days <= 2){
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms are recent (' + days + ' day(s)). This appears to be an early-stage presentation. Please monitor closely and consult a doctor if symptoms worsen.</div>';
+    } else if(days <= 7){
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have persisted for ' + days + ' day(s). If not improving, please seek medical attention.</div>';
+    } else if(days <= 14){
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have lasted ' + days + ' days. Prolonged symptoms warrant a professional check-up.</div>';
+    } else {
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have persisted for ' + days + ' days (2+ weeks). <span style="color:var(--danger);font-weight:600">Please consult a doctor immediately.</span></div>';
+    }
+  }
+  
   const html = "Based on your symptoms, my best assessment is:" +
     "<div class=\"diagnosis-card\">" +
       "<div class=\"dx-head\">" +
@@ -1284,8 +1311,9 @@ function finalDiagnosis(top, conf){
         "</div>" +
         "<span class=\"conf\">" + Math.round(conf*100) + "% confidence</span>" +
       "</div>" +
-      "<div class=\"dx-section\"><b>Common Symptoms</b>" + d.symptoms.join(' • ') + "</div>" +
-      "<div class=\"dx-section\"><b>🍵 Home Remedies</b>" + d.remedies + "</div>" +
+        "<div class=\"dx-section\"><b>Common Symptoms</b>" + d.symptoms.join(' • ') + "</div>" +
+        durationNote +
+        "<div class=\"dx-section\"><b>🍵 Home Remedies</b>" + d.remedies + "</div>" +
       "<div class=\"dx-section\"><b>💊 Generic Prescriptions</b>" + d.prescriptions + "</div>" +
       "<div class=\"disclaimer\">⚠️ This is an AI-assisted suggestion, not a medical diagnosis. Please consult a licensed pharmacist or doctor for body-specific confirmation before taking any medication.</div>" +
     "</div>" +
