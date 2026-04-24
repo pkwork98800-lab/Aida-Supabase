@@ -1,686 +1,2493 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aida - AI Disease Detection</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#007BFF" />
+<title>Aida — AI Disease Detection Chatbot</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+  }
+}
+</script>
 <style>
-:root{--primary:#007BFF;--success:#28A745;--bg:#F8F9FA;--ink:#1f2937;--muted:#6b7280;--card:#fff;--border:#e5e7eb;--shadow:0 10px 30px rgba(0,123,255,.08);--grad:linear-gradient(135deg,#007BFF,#28A745)}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;padding:0}
-body{font-family:'Inter',system-ui;background:var(--bg);color:var(--ink)}
-.view{display:none}
-.view.active{display:block}
-.navbar{background:#fff;border-bottom:1px solid var(--border);padding:.75rem 1.25rem}
-.brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.35rem;color:var(--ink);text-decoration:none}
-.brand-logo{width:38px;height:38px;border-radius:11px;background:var(--grad);display:grid;place-items:center;color:#fff}
-.btn-grad{background:var(--grad);color:#fff;border:none;padding:.55rem 1.2rem;border-radius:10px;font-weight:600;cursor:pointer}
-.btn-grad:hover{transform:translateY(-1px)}
-.btn-ghost{background:0;border:1px solid var(--border);padding:.5rem 1rem;border-radius:10px;font-weight:600;cursor:pointer}
-.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
-.hero{padding:4rem 1rem;text-align:center}
-.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;margin-bottom:1rem}
-.hero h1 .gd{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{color:var(--muted);max-width:600px;margin:0 auto 2rem;font-size:1.1rem}
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;max-width:1000px;margin:3rem auto;padding:0 1rem}
-.feat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.4rem;box-shadow:var(--shadow)}
-.feat-icn{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,rgba(0,123,255,.1),rgba(40,167,69,.1));display:grid;place-items:center;color:var(--primary);font-size:1.3rem;margin-bottom:.8rem}
-.auth-wrap{min-height:calc(100vh - 70px);display:grid;place-items:center;padding:2rem}
-.auth-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.2rem;max-width:420px;width:100%;box-shadow:var(--shadow)}
-.auth-card h3{font-weight:800;margin-bottom:.25rem}
-.auth-card .sub{color:var(--muted);margin-bottom:1.4rem}
-.form-control{border-radius:10px;padding:.7rem .9rem;border:1px solid var(--border)}
-.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 .2rem rgba(0,123,255,.15)}
-.form-label{font-weight:600;font-size:.88rem}
-.auth-switch{text-align:center;margin-top:1rem;color:var(--muted)}
-.auth-switch a{color:var(--primary);font-weight:600;text-decoration:none}
-.auth-error{color:#dc3545;font-size:.85rem;margin-top:.6rem;display:none}
-.auth-error.show{display:block}
-.chat-shell{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 60px)}
-.sidebar{background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column}
-.side-profile{padding:1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.8rem}
-.avatar{width:40px;height:40px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:700}
-.side-section{padding:1rem}
-.side-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:.5rem}
-.side-history{flex:1;overflow-y:auto}
-.chat-area{display:flex;flex-direction:column;height:100%;background:#f8f9fa}
-.chat-header{padding:1rem 1.4rem;border-bottom:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:space-between}
-.chat-header h6{margin:0;font-weight:700}
-.status{font-size:.78rem;color:var(--success);display:flex;align-items:center;gap:.3rem}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:ping 1.6s infinite}
-@keyframes ping{0%{box-shadow:0 0 0 0 rgba(40,167,69,.5)}70%{box-shadow:0 0 0 8px rgba(40,167,69,0)}100%{box-shadow:0 0 0 0}}
-.chat-messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem}
-.msg{display:flex;gap:.7rem;max-width:75%;animation:fadeUp .3s}
-.msg.user{align-self:flex-end;flex-direction:row-reverse}
-.msg .bubble{padding:.8rem 1rem;border-radius:16px;line-height:1.5;font-size:.95rem}
-.msg.bot .bubble{background:#fff;border:1px solid var(--border)}
-.msg.user .bubble{background:var(--grad);color:#fff}
-.msg .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff}
-.msg.bot .av{background:var(--grad)}
-.msg.user .av{background:#374151}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
-.typing{display:inline-flex;gap:4px;padding:.4rem 0}
-.typing span{width:7px;height:7px;border-radius:50%;background:var(--primary);opacity:.5;animation:tp 1s infinite}
-.typing span:nth-child(2){animation-delay:.2s}
-@keyframes tp{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
-.diagnosis-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1rem;margin-top:.6rem}
-.dx-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
-.dx-name{font-weight:800;color:var(--primary)}
-.conf{background:var(--grad);color:#fff;font-size:.75rem;padding:.2rem .5rem;border-radius:999px}
-.dx-section{margin-top:.6rem;font-size:.9rem}
-.dx-section b{display:block;margin-bottom:.2rem;font-size:.8rem;text-transform:uppercase;color:var(--muted)}
-.disclaimer{margin-top:.7rem;font-size:.78rem;color:#92400e;background:#fef3c7;padding:.5rem;border-radius:8px;border-left:3px solid #f59e0b}
-.chat-input-wrap{padding:1rem;border-top:1px solid var(--border);background:#fff}
-.chat-input{display:flex;gap:.6rem;align-items:center;background:#fff;border:1px solid var(--border);border-radius:14px;padding:.5rem 1rem}
-.chat-input input{flex:1;border:none;outline:none;font-size:.95rem}
-.send-btn{background:var(--grad);border:none;color:#fff;width:40px;height:40px;border-radius:10px;cursor:pointer}
-.admin-shell{display:grid;grid-template-columns:220px 1fr}
-.admin-side{background:#0f172a;color:#e5e7eb;padding:1.5rem}
-.admin-main{padding:1.5rem 2rem;background:#f1f5f9}
-.admin-main h3{font-weight:800;margin-bottom:1.5rem}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
-.stat-card{background:#fff;border-radius:14px;padding:1.2rem;position:relative}
-.stat-card .lbl{color:var(--muted);font-size:.8rem;font-weight:600;text-transform:uppercase}
-.stat-card .val{font-size:1.8rem;font-weight:800;margin-top:.3rem}
-.stat-card .icn{position:absolute;top:1rem;right:1rem;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,123,255,.1),rgba(40,167,69,.1));color:var(--primary);display:grid;place-items:center}
-.panel{background:#fff;border-radius:14px;padding:1.2rem 1.4rem}
-.panel h6{font-weight:700;margin-bottom:1rem}
-table{width:100%;border-collapse:collapse}
-table th{text-align:left;padding:.7rem .5rem;border-bottom:2px solid var(--border);font-size:.75rem;text-transform:uppercase;color:var(--muted)}
-table td{padding:.75rem .5rem;border-bottom:1px solid #f1f5f9}
-table tr:hover td{background:#fafbfc}
-.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.75rem 1.2rem;border-radius:12px;font-size:.9rem;z-index:99999;transform:translateY(100px);opacity:0;transition:all .35s}
-.toast.show{transform:translateY(0);opacity:1}
-@media (max-width:900px){.chat-shell{grid-template-columns:1fr}.sidebar{display:none}.admin-shell{grid-template-columns:1fr}.admin-side{display:none}}
-@media (max-width:500px){.hero{padding:2rem 1rem}.chat-messages{padding:1rem}.msg{max-width:90%}}
-::-webkit-scrollbar{width:8px}
-::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+  :root{
+    --primary:#007BFF;
+    --primary-dark:#0056b3;
+    --success:#28A745;
+    --success-dark:#1e7e34;
+    --bg:#F8F9FA;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --card:#ffffff;
+    --border:#e5e7eb;
+    --shadow:0 10px 30px rgba(0,123,255,.08), 0 4px 12px rgba(0,0,0,.04);
+    --grad:linear-gradient(135deg,#007BFF 0%,#28A745 100%);
+    --grad-soft:linear-gradient(135deg,rgba(0,123,255,.08),rgba(40,167,69,.08));
+    --danger:#dc3545;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);
+    overflow-x:hidden;
+  }
+  #bg-canvas{position:fixed;inset:0;z-index:0;opacity:.55;pointer-events:none}
+  .page{position:relative;z-index:1;min-height:100vh}
+  /* Navbar */
+  .navbar-aida{
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+    padding:.75rem 1.25rem;
+  }
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.35rem;color:var(--ink);text-decoration:none}
+  .brand-logo{
+    width:38px;height:38px;border-radius:11px;background:var(--grad);
+    display:grid;place-items:center;color:#fff;font-size:1.1rem;
+    box-shadow:0 6px 18px rgba(0,123,255,.35);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .brand span.gd{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .btn-grad{
+    background:var(--grad);color:#fff;border:none;font-weight:600;
+    padding:.55rem 1.2rem;border-radius:10px;
+    transition:transform .15s ease, box-shadow .15s ease;
+    cursor:pointer;
+  }
+  .btn-grad:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,123,255,.35);color:#fff}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--border);font-weight:600;padding:.5rem 1rem;border-radius:10px;cursor:pointer}
+  .btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+  .btn-danger{background:var(--danger);color:#fff;border:none;font-weight:600;padding:.55rem 1.2rem;border-radius:10px;cursor:pointer}
+  .btn-danger:hover{background:#c82333}
+  /* Landing */
+  .hero{padding:5rem 1rem 4rem;text-align:center}
+  .hero h1{font-size:clamp(2.2rem,5.2vw,4rem);font-weight:800;line-height:1.05;margin-bottom:1rem}
+  .hero h1 .gd{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{font-size:1.15rem;color:var(--muted);max-width:680px;margin:0 auto 2rem}
+  .hero-badges{display:flex;justify-content:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1.5rem}
+  .badge-pill{background:#fff;border:1px solid var(--border);padding:.35rem .8rem;border-radius:999px;font-size:.8rem;color:var(--muted);font-weight:500}
+  .badge-pill i{color:var(--success);margin-right:.25rem}
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;max-width:1100px;margin:3rem auto 0;padding:0 1rem}
+  .feat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.4rem;box-shadow:var(--shadow);transition:transform .2s ease}
+  .feat-card:hover{transform:translateY(-4px)}
+  .feat-icn{width:46px;height:46px;border-radius:12px;background:var(--grad-soft);display:grid;place-items:center;color:var(--primary);font-size:1.3rem;margin-bottom:.8rem}
+  .feat-card h5{font-weight:700;margin-bottom:.35rem}
+  .feat-card p{color:var(--muted);font-size:.92rem;margin:0}
+  /* Auth */
+  .auth-wrap{min-height:calc(100vh - 70px);display:grid;place-items:center;padding:2rem 1rem}
+  .auth-card{
+    background:var(--card);border:1px solid var(--border);border-radius:20px;
+    padding:2.2rem;max-width:430px;width:100%;box-shadow:var(--shadow);
+  }
+  .auth-card h3{font-weight:800;margin-bottom:.25rem}
+  .auth-card .sub{color:var(--muted);margin-bottom:1.4rem;font-size:.95rem}
+  .form-control{border-radius:10px;padding:.7rem .9rem;border:1px solid var(--border)}
+  .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 .2rem rgba(0,123,255,.15)}
+  .form-label{font-weight:600;font-size:.88rem}
+  .auth-switch{text-align:center;margin-top:1rem;color:var(--muted);font-size:.9rem}
+  .auth-switch a{color:var(--primary);font-weight:600;text-decoration:none}
+  .auth-error{color:var(--danger);font-size:.85rem;margin-top:.6rem;display:none;font-weight:500}
+  .auth-error.show{display:block}
+  .lock-icon{width:64px;height:64px;border-radius:50%;background:var(--grad);color:#fff;display:inline-grid;place-items:center;font-size:1.6rem;margin-bottom:1rem;box-shadow:0 8px 24px rgba(0,123,255,.3)}
+  /* Chat layout */
+  .chat-shell{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 70px);background:transparent}
+  .sidebar{
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;
+  }
+  .side-profile{padding:1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.8rem}
+  .avatar{width:46px;height:46px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:700}
+  .side-profile .name{font-weight:700}
+  .side-profile .em{font-size:.8rem;color:var(--muted)}
+  .side-section{padding:1rem 1.2rem}
+  .side-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:.5rem}
+  .side-history{flex:1;overflow-y:auto;padding:0 .6rem 1rem}
+  .history-item{padding:.7rem .8rem;border-radius:10px;cursor:pointer;color:#374151;font-size:.9rem;display:flex;gap:.5rem;align-items:center;transition:background .15s}
+  .history-item:hover{background:var(--grad-soft);color:var(--primary)}
+  .history-item i{color:var(--primary)}
+  .chat-area{display:flex;flex-direction:column;height:100%;background:rgba(248,249,250,.6);backdrop-filter:blur(4px)}
+  .chat-header{padding:.9rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.85)}
+  .chat-header .title{display:flex;gap:.7rem;align-items:center}
+  .chat-header h6{margin:0;font-weight:700}
+  .chat-header .status{font-size:.78rem;color:var(--success);display:flex;align-items:center;gap:.3rem}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 0 rgba(40,167,69,.6);animation:pingdot 1.6s infinite}
+  @keyframes pingdot{0%{box-shadow:0 0 0 0 rgba(40,167,69,.5)}70%{box-shadow:0 0 0 8px rgba(40,167,69,0)}100%{box-shadow:0 0 0 0 rgba(40,167,69,0)}}
+  .chat-messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem}
+  .msg{display:flex;gap:.7rem;max-width:78%;animation:fadeUp .35s ease}
+  .msg.user{align-self:flex-end;flex-direction:row-reverse}
+  .msg .bubble{padding:.8rem 1rem;border-radius:16px;line-height:1.5;font-size:.95rem;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .msg.bot .bubble{background:#fff;border:1px solid var(--border);border-top-left-radius:4px}
+  .msg.user .bubble{background:var(--grad);color:#fff;border-top-right-radius:4px}
+  .msg .av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:700;color:#fff}
+  .msg.bot .av{background:var(--grad)}
+  .msg.user .av{background:#374151}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .typing{display:inline-flex;gap:4px;padding:.4rem 0}
+  .typing span{width:7px;height:7px;border-radius:50%;background:var(--primary);opacity:.5;animation:tp 1s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}
+  .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes tp{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
+  .quick-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+  .chip{background:var(--grad-soft);color:var(--primary);border:1px solid rgba(0,123,255,.25);padding:.35rem .8rem;border-radius:999px;font-size:.82rem;cursor:pointer;font-weight:500;transition:all .15s}
+  .chip:hover{background:var(--grad);color:#fff;border-color:transparent}
+  .diagnosis-card{
+    background:#fff;border:1px solid var(--border);border-radius:14px;padding:1rem;margin-top:.6rem;
+    box-shadow:var(--shadow)
+  }
+  .diagnosis-card .dx-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+  .diagnosis-card .dx-name{font-weight:800;font-size:1.05rem;color:var(--primary)}
+  .diagnosis-card .conf{background:var(--grad);color:#fff;font-size:.78rem;padding:.2rem .6rem;border-radius:999px;font-weight:600}
+  .dx-section{margin-top:.6rem;font-size:.9rem}
+  .dx-section b{color:var(--ink);display:block;margin-bottom:.2rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .disclaimer{margin-top:.7rem;font-size:.78rem;color:#92400e;background:#fef3c7;padding:.5rem .7rem;border-radius:8px;border-left:3px solid #f59e0b}
+  .chat-input-wrap{padding:1rem 1.4rem;border-top:1px solid var(--border);background:rgba(255,255,255,.92)}
+  .chat-input{display:flex;gap:.6rem;align-items:center;background:#fff;border:1px solid var(--border);border-radius:14px;padding:.4rem .5rem .4rem 1rem;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+  .chat-input input{flex:1;border:none;outline:none;padding:.6rem 0;font-size:.95rem;background:transparent}
+  .send-btn{background:var(--grad);border:none;color:#fff;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;cursor:pointer;transition:transform .15s}
+  .send-btn:hover{transform:scale(1.05)}
+  /* Admin */
+  .admin-shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 70px)}
+  .admin-side{background:#0f172a;color:#e5e7eb;padding:1.5rem 1rem;overflow-y:auto}
+  .admin-side .brand{color:#fff;margin-bottom:1.5rem}
+  .admin-nav a{display:flex;align-items:center;gap:.65rem;padding:.7rem .8rem;border-radius:10px;color:#94a3b8;text-decoration:none;font-weight:500;margin-bottom:.25rem;cursor:pointer;transition:all .15s}
+  .admin-nav a:hover,.admin-nav a.active{background:rgba(0,123,255,.18);color:#fff}
+  .admin-main{padding:1.8rem 2rem;background:#f1f5f9;overflow-y:auto;max-height:calc(100vh - 70px)}
+  .admin-main h3{font-weight:800;margin-bottom:1.4rem}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.6rem}
+  .stat-card{background:#fff;border-radius:14px;padding:1.2rem;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .stat-card .lbl{color:var(--muted);font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .stat-card .val{font-size:1.9rem;font-weight:800;margin-top:.4rem}
+  .stat-card .delta{font-size:.8rem;color:var(--success);font-weight:600;margin-top:.2rem}
+  .stat-card .icn{position:absolute;top:1rem;right:1rem;width:38px;height:38px;border-radius:10px;background:var(--grad-soft);color:var(--primary);display:grid;place-items:center;font-size:1.1rem}
+  .chart-row{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1.6rem}
+  .chart-single{margin-bottom:1.6rem}
+  .panel{background:#fff;border-radius:14px;padding:1.2rem 1.4rem;box-shadow:var(--shadow)}
+  .panel h6{font-weight:700;margin-bottom:1rem}
+  table.aida-tbl{width:100%;border-collapse:collapse}
+  table.aida-tbl th{text-align:left;padding:.7rem .5rem;border-bottom:2px solid var(--border);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  table.aida-tbl td{padding:.75rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.92rem}
+  table.aida-tbl tr:hover td{background:#fafbfc}
+  .pill{padding:.2rem .55rem;border-radius:999px;font-size:.72rem;font-weight:600}
+  .pill-blue{background:rgba(0,123,255,.12);color:var(--primary)}
+  .pill-green{background:rgba(40,167,69,.12);color:var(--success)}
+  .pill-red{background:rgba(220,53,69,.12);color:#dc3545}
+  .pill-yellow{background:rgba(251,191,36,.15);color:#92400e}
+  .icon-btn{background:transparent;border:none;color:var(--muted);padding:.3rem .5rem;cursor:pointer;border-radius:6px;transition:all .15s}
+  .icon-btn:hover{background:#f3f4f6;color:var(--primary)}
+  .icon-btn.del:hover{color:#dc3545;background:rgba(220,53,69,.08)}
+  textarea.form-control{min-height:160px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.88rem}
+  .extract-result{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem;margin-top:1rem;display:none}
+  .extract-result.show{display:block}
+  /* Mobile admin top bar */
+  .admin-mobile-bar{
+    display:none;
+    background:#0f172a;
+    padding:.6rem .8rem;
+    gap:.4rem;
+    overflow-x:auto;
+    white-space:nowrap;
+    -webkit-overflow-scrolling:touch;
+  }
+  .admin-mobile-bar a{
+    display:inline-flex;align-items:center;gap:.4rem;
+    padding:.5rem .75rem;border-radius:8px;color:#94a3b8;
+    text-decoration:none;font-weight:500;font-size:.85rem;cursor:pointer;
+    transition:all .15s;flex-shrink:0;
+  }
+  .admin-mobile-bar a:hover,.admin-mobile-bar a.active{background:rgba(0,123,255,.2);color:#fff}
+  /* Disease detail modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);
+    display:flex;align-items:center;justify-content:center;
+    z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .modal-overlay.show{opacity:1;pointer-events:auto}
+  .modal-box{
+    background:#fff;border-radius:18px;padding:1.8rem;
+    max-width:560px;width:92%;max-height:85vh;overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.15);
+    transform:scale(.92);transition:transform .25s ease;
+  }
+  .modal-overlay.show .modal-box{transform:scale(1)}
+  .modal-box h4{font-weight:800;margin-bottom:.4rem}
+  .modal-box .close-modal{
+    position:absolute;top:1rem;right:1.2rem;background:none;border:none;
+    font-size:1.3rem;color:var(--muted);cursor:pointer;
+  }
+  .modal-box .close-modal:hover{color:var(--ink)}
+  .modal-section{margin-top:1rem}
+  .modal-section label{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);display:block;margin-bottom:.3rem}
+  .modal-section .val{font-size:.95rem;line-height:1.6}
+  .symptom-tag{display:inline-block;background:var(--grad-soft);color:var(--primary);padding:.2rem .6rem;border-radius:999px;font-size:.8rem;margin:.15rem .2rem .15rem 0;font-weight:500}
+  .toast-msg{
+    position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;
+    padding:.75rem 1.2rem;border-radius:12px;font-size:.9rem;font-weight:500;
+    box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:99999;
+    transform:translateY(100px);opacity:0;transition:all .35s ease;
+  }
+  .toast-msg.show{transform:translateY(0);opacity:1}
+  /* Edit disease form */
+  .edit-form .form-control{margin-bottom:.6rem}
+  .edit-form label{font-weight:600;font-size:.82rem;color:var(--muted);margin-bottom:.2rem;display:block}
+  /* Pagination */
+  .pagination-wrap{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--border)}
+  .pagination-wrap .info{font-size:.85rem;color:var(--muted)}
+  .pagination-wrap .pg-btns{display:flex;gap:.3rem}
+  .pg-btn{
+    background:#fff;border:1px solid var(--border);padding:.35rem .7rem;border-radius:8px;
+    cursor:pointer;font-size:.85rem;font-weight:500;transition:all .15s;
+  }
+  .pg-btn:hover{border-color:var(--primary);color:var(--primary)}
+  .pg-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .pg-btn:disabled{opacity:.4;cursor:default}
+  /* Admin session badge */
+  .admin-session-bar{
+    background:linear-gradient(90deg,#0f172a,#1e293b);
+    color:#94a3b8;padding:.5rem 1.2rem;display:flex;
+    align-items:center;justify-content:space-between;font-size:.82rem;
+  }
+  .admin-session-bar .admin-user{display:flex;align-items:center;gap:.5rem;color:#e5e7eb;font-weight:600}
+  .admin-session-bar .admin-user i{color:var(--success)}
+  .admin-logout-btn{background:rgba(220,53,69,.15);color:#dc3545;border:1px solid rgba(220,53,69,.3);padding:.3rem .8rem;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .15s}
+  .admin-logout-btn:hover{background:#dc3545;color:#fff}
+  /* Responsive */
+  @media (max-width:1024px){
+    .chat-shell{grid-template-columns:1fr}
+    .sidebar{display:none}
+    #bg-canvas{opacity:.25}
+    .admin-shell{grid-template-columns:1fr}
+    .admin-side{display:none}
+    .admin-mobile-bar{display:flex}
+    .chart-row{grid-template-columns:1fr}
+    .admin-main{max-height:none;padding:1.2rem 1rem}
+  }
+  @media (max-width:640px){
+    .hero{padding:3rem 1rem 2rem}
+    .chat-messages{padding:1rem}
+    .msg{max-width:88%}
+    .chat-input-wrap{padding:.7rem}
+    .auth-card{padding:1.6rem}
+    .stat-grid{grid-template-columns:1fr 1fr}
+    .stat-card .val{font-size:1.4rem}
+  }
+  .view{display:none}
+  .view.active{display:block}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+  .footer-mini{text-align:center;padding:1.5rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border);background:rgba(255,255,255,.7)}
+  /* Password toggle */
+  .pass-wrap{position:relative}
+  .pass-wrap input{padding-right:2.5rem}
+  .pass-toggle{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:0}
+  .pass-toggle:hover{color:var(--primary)}
+  /* MongoDB badge */
+  .db-badge{display:inline-flex;align-items:center;gap:.4rem;background:#00684a;color:#fff;padding:.25rem .65rem;border-radius:8px;font-size:.72rem;font-weight:600;letter-spacing:.03em}
+  .db-badge img{width:14px;height:14px}
 </style>
 </head>
 <body>
-
-<div class="toast" id="toast"></div>
-
-<div class="page">
-<nav class="navbar d-flex align-items-center justify-content-between">
-  <a href="#" class="brand" onclick="showView('landing')">
-    <div class="brand-logo"><i class="bi bi-heart-pulse-fill"></i></div>
-    <span>Aida<span class="gd">.</span></span>
-  </a>
-  <div class="d-flex align-items-center gap-2">
-    <button class="btn-ghost" onclick="showView('login')">Login</button>
-    <button class="btn-grad" onclick="showView('register')">Get Started</button>
-  </div>
-</nav>
-
-<!-- Landing -->
-<section class="view active" id="view-landing">
-  <div class="hero">
-    <h1>Meet <span class="gd">Aida</span> — your AI<br>disease detection companion</h1>
-    <p>Describe your symptoms in plain language. Aida asks smart questions and predicts conditions from 100+ diseases with remedies and prescriptions.</p>
-    <div class="d-flex justify-content-center gap-2 flex-wrap mb-4">
-      <button class="btn-grad btn-lg" onclick="requireAuth()"><i class="bi bi-chat-heart-fill"></i> Try Aida Now</button>
-      <button class="btn-ghost btn-lg" onclick="showView('admin-login')"><i class="bi bi-speedometer2"></i> Admin</button>
-    </div>
-    <div class="features">
-      <div class="feat-card"><div class="feat-icn"><i class="bi bi-chat-dots-fill"></i></div><h5>Conversational AI</h5><p>Aida asks targeted questions to refine diagnosis.</p></div>
-      <div class="feat-card"><div class="feat-icn"><i class="bi bi-shield-plus"></i></div><h5>Safety First</h5><p>Every recommendation includes a disclaimer.</p></div>
-      <div class="feat-card"><div class="feat-icn"><i class="bi bi-phone"></i></div><h5>Fully Responsive</h5><p>Works on all devices.</p></div>
-      <div class="feat-card"><div class="feat-icn"><i class="bi bi-graph-up-arrow"></i></div><h5>Admin Panel</h5><p>Real-time analytics.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- Login -->
-<section class="view" id="view-login">
-  <div class="auth-wrap">
-    <div class="auth-card">
-      <h3>Welcome back</h3>
-      <p class="sub">Sign in to continue</p>
-      <form onsubmit="doLogin(event)">
-        <div class="mb-3"><label class="form-label">Email</label><input class="form-control" type="email" id="email" placeholder="you@example.com" required></div>
-        <div class="mb-3"><label class="form-label">Password</label><input class="form-control" type="password" id="password" placeholder="Password" required></div>
-        <div class="auth-error" id="login-error"></div>
-        <button class="btn-grad w-100 mt-2" type="submit">Sign in</button>
-      </form>
-      <div class="auth-switch">No account? <a href="#" onclick="showView('register')">Create one</a></div>
-    </div>
-  </div>
-</section>
-
-<!-- Register -->
-<section class="view" id="view-register">
-  <div class="auth-wrap">
-    <div class="auth-card">
-      <h3>Create account</h3>
-      <p class="sub">Start chatting with Aida</p>
-      <form onsubmit="doRegister(event)">
-        <div class="mb-3"><label class="form-label">Full Name</label><input class="form-control" id="reg-name" placeholder="Your name" required></div>
-        <div class="mb-3"><label class="form-label">Email</label><input class="form-control" type="email" id="reg-email" placeholder="you@example.com" required></div>
-        <div class="mb-3"><label class="form-label">Password</label><input class="form-control" type="password" id="reg-pass" placeholder="At least 6 characters" minlength="6" required></div>
-        <div class="mb-3"><label class="form-label">Confirm</label><input class="form-control" type="password" id="reg-pass2" placeholder="Repeat password" required></div>
-        <div class="auth-error" id="reg-error"></div>
-        <button class="btn-grad w-100 mt-2" type="submit">Create account</button>
-      </form>
-      <div class="auth-switch">Have account? <a href="#" onclick="showView('login')">Sign in</a></div>
-    </div>
-  </div>
-</section>
-
-<!-- Admin Login -->
-<section class="view" id="view-admin-login">
-  <div class="auth-wrap">
-    <div class="auth-card" style="text-align:center">
-      <div class="brand-logo" style="margin:0 auto 1rem;width:64px;height:64px;font-size:1.5rem"><i class="bi bi-shield-lock-fill"></i></div>
-      <h3>Admin Access</h3>
-      <p class="sub">Enter admin credentials</p>
-      <form onsubmit="doAdminLogin(event)">
-        <div class="mb-3"><label class="form-label">Username</label><input class="form-control" id="admin-user" placeholder="Admin Username" required autocomplete=" username"></div>
-        <div class="mb-3"><label class="form-label">Password</label><input class="form-control" type="password" id="admin-pass" required autocomplete="current-password"></div>
-        <div class="auth-error" id="admin-error"></div>
-        <button class="btn-grad w-100 mt-2" type="submit">Authenticate</button>
-      </form>
-      <div class="auth-switch"><a href="#" onclick="showView('landing')">Back to Home</a></div>
-    </div>
-  </div>
-</section>
-
-<!-- Chat -->
-<section class="view" id="view-chat">
-  <div class="chat-shell">
-    <aside class="sidebar">
-      <div class="side-profile">
-        <div class="avatar" id="user-avatar">U</div>
-        <div><div class="fw-bold" id="user-name">User</div><div class="text-muted" style="font-size:.8rem" id="user-email">user@email.com</div></div>
-      </div>
-      <div class="side-section">
-        <button class="btn-ghost w-100 mb-2" onclick="newChat()">New Chat</button>
-        <button class="btn-ghost w-100" onclick="logout()">Sign out</button>
-      </div>
-      <div class="side-section"><div class="side-title">History</div></div>
-      <div class="side-history" id="history-list"></div>
-    </aside>
-    <main class="chat-area">
-      <div class="chat-header">
-        <div class="d-flex align-items-center gap-2">
-          <div class="avatar" style="width:36px;height:36px"><i class="bi bi-heart-pulse-fill"></i></div>
-          <div><h6 class="mb-0">Aida</h6><div class="status"><span class="dot"></span> Online</div></div>
-        </div>
-      </div>
-      <div class="chat-messages" id="messages"></div>
-      <div class="chat-input-wrap">
-        <div class="chat-input">
-          <input id="chat-input" type="text" placeholder="Describe your symptoms...">
-          <button class="send-btn" onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
-        </div>
-      </div>
-    </main>
-  </div>
-</section>
-
-<!-- Admin -->
-<section class="view" id="view-admin">
-  <div class="admin-shell">
-    <aside class="admin-side">
-      <a href="#" class="brand" onclick="showView('landing')" style="color:#fff;margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem">
-        <div class="brand-logo"><i class="bi bi-heart-pulse-fill"></i></div>
-        <span>Aida<span class="gd">.</span></span>
-      </a>
-      <nav>
-        <a class="d-flex align-items-center gap-2 p-2 rounded" style="color:#fff;cursor:pointer" onclick="adminTab('dashboard',this)"><i class="bi bi-speedometer2"></i> Dashboard</a>
-        <a class="d-flex align-items-center gap-2 p-2 rounded" style="color:#94a3b8;cursor:pointer" onclick="adminTab('users',this)"><i class="bi bi-people"></i> Users</a>
-        <a class="d-flex align-items-center gap-2 p-2 rounded" style="color:#94a3b8;cursor:pointer" onclick="adminTab('library',this)"><i class="bi bi-journal-medical"></i> Library</a>
-        <a class="d-flex align-items-center gap-2 p-2 rounded" style="color:#dc3545;cursor:pointer" onclick="adminLogout()"><i class="bi bi-box-arrow-right"></i> Logout</a>
-      </nav>
-    </aside>
-    <main class="admin-main">
-      <div class="admin-tab active" id="tab-dashboard">
-        <h3>Dashboard</h3>
-        <div class="stat-grid">
-          <div class="stat-card"><div class="icn"><i class="bi bi-eye"></i></div><div class="lbl">Page Visits</div><div class="val" id="stat-visits">0</div></div>
-          <div class="stat-card"><div class="icn"><i class="bi bi-person-plus"></i></div><div class="lbl">Users</div><div class="val" id="stat-users">0</div></div>
-          <div class="stat-card"><div class="icn"><i class="bi bi-chat-square-text"></i></div><div class="lbl">Messages</div><div class="val" id="stat-msgs">0</div></div>
-        </div>
-      </div>
-      <div class="admin-tab" id="tab-users" style="display:none">
-        <h3>Users</h3>
-        <div class="panel">
-          <table><thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Messages</th></tr></thead><tbody id="users-table"></tbody></table>
-        </div>
-      </div>
-      <div class="admin-tab" id="tab-library" style="display:none">
-        <h3>Disease Library (<span id="lib-count">100</span>)</h3>
-        <div class="panel">
-          <div class="d-flex gap-2 mb-3"><input class="form-control" placeholder="Search diseases..." oninput="filterDiseases(this.value)"><button class="btn-grad" onclick="toggleAddForm()">+ Add Disease</button></div>
-          <table><thead><tr><th>#</th><th>Disease</th><th>Symptoms</th><th>Severity</th></tr></thead><tbody id="lib-table"></tbody></table>
-        </div>
-      </div>
-      <div class="admin-tab" id="tab-add-disease" style="display:none">
-        <h3>Add New Disease</h3>
-        <div class="panel">
-          <div class="mb-2"><input class="form-control" id="new-disease-name" placeholder="Disease Name"></div>
-          <div class="mb-2"><input class="form-control" id="new-disease-symptoms" placeholder="Symptoms (comma separated)"></div>
-          <div class="mb-2"><input class="form-control" id="new-disease-remedies" placeholder="Home Remedies"></div>
-          <div class="mb-2"><input class="form-control" id="new-disease-prescriptions" placeholder="Prescriptions"></div>
-          <div class="mb-2"><select class="form-control" id="new-disease-severity"><option value="minor">Minor</option><option value="moderate">Moderate</option><option value="major">Major</option></select></div>
-          <button class="btn-grad" onclick="addDisease()">Add Disease</button>
-          <button class="btn-ghost ms-2" onclick="showLib()">Cancel</button>
-        </div>
-      </div>
-    </main>
-  </div>
-</section>
+<canvas id="bg-canvas"></canvas>
+<!-- Toast notification -->
+<div class="toast-msg" id="toast"></div>
+<!-- Modal overlay -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-box" id="modal-box"></div>
 </div>
-
+<div class="page">
+  <!-- NAVBAR -->
+  <nav class="navbar-aida d-flex align-items-center justify-content-between" id="topnav">
+    <a href="#" class="brand" onclick="showView('landing');return false;">
+      <div class="brand-logo"><i class="bi bi-heart-pulse-fill"></i></div>
+      <span>Aida<span class="gd">.</span></span>
+    </a>
+    <div class="d-flex align-items-center gap-2" id="nav-actions">
+      <button class="btn-ghost d-none d-md-inline-flex" onclick="showView('landing')"><i class="bi bi-house-door"></i> Home</button>
+      <button class="btn-ghost" onclick="showView('login')">Login</button>
+      <button class="btn-grad" onclick="showView('register')">Get Started</button>
+    </div>
+  </nav>
+  <!-- LANDING VIEW -->
+  <section class="view active" id="view-landing">
+    <div class="hero">
+      <div class="hero-badges">
+        <span class="badge-pill"><i class="bi bi-shield-check"></i> HIPAA-aware design</span>
+        <span class="badge-pill"><i class="bi bi-cpu"></i> NLP-powered</span>
+        <span class="badge-pill"><i class="bi bi-database"></i> 100+ Diseases</span>
+        <span class="badge-pill"><i class="bi bi-lightning"></i> Real-time SocketIO</span>
+        <span class="badge-pill"><i class="bi bi-server"></i> MongoDB Ready</span>
+      </div>
+      <h1>Meet <span class="gd">Aida</span> — your AI<br/>disease detection companion</h1>
+      <p class="lead">Describe your symptoms in plain language. Aida asks smart clarifying questions and predicts the most likely condition from a curated database of 100 common diseases — with home remedies and generic prescription suggestions.</p>
+      <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <button class="btn-grad btn-lg" onclick="requireAuthForChat()"><i class="bi bi-chat-heart-fill"></i> Try Aida Now</button>
+        <button class="btn-ghost btn-lg" onclick="requireAdminLogin()"><i class="bi bi-speedometer2"></i> Admin Panel</button>
+      </div>
+      <div class="features">
+        <div class="feat-card">
+          <div class="feat-icn"><i class="bi bi-chat-dots-fill"></i></div>
+          <h5>Conversational AI</h5>
+          <p>Aida asks 3–5 targeted questions to refine diagnosis with ~95% confidence.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icn"><i class="bi bi-shield-plus"></i></div>
+          <h5>Safety First</h5>
+          <p>Every recommendation includes a disclaimer to consult a licensed pharmacist or doctor.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icn"><i class="bi bi-phone"></i></div>
+          <h5>Fully Responsive</h5>
+          <p>Desktop sidebar + 3D background, full-screen PWA chat on mobile and tablet.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icn"><i class="bi bi-graph-up-arrow"></i></div>
+          <h5>Admin Insights</h5>
+          <p>Secured admin panel with charts for visits, signups, messages, and disease library.</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-mini">
+      ⚠️ Educational prototype — Aida is not a substitute for professional medical advice. &nbsp;
+      <span class="db-badge"><i class="bi bi-database-fill"></i> MongoDB</span>
+    </div>
+  </section>
+  <!-- USER LOGIN -->
+  <section class="view" id="view-login">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h3>Welcome back 👋</h3>
+        <p class="sub">Sign in to continue your conversation with Aida.</p>
+        <form onsubmit="doLogin(event)">
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" id="login-email" placeholder="you@example.com" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <div class="pass-wrap">
+              <input class="form-control" type="password" id="login-pass" placeholder="••••••••" required />
+              <button type="button" class="pass-toggle" onclick="togglePass('login-pass',this)"><i class="bi bi-eye"></i></button>
+            </div>
+          </div>
+          <div class="auth-error" id="login-error"></div>
+          <button class="btn-grad w-100 mt-2" type="submit"><i class="bi bi-box-arrow-in-right"></i> Sign in</button>
+        </form>
+        <div class="auth-switch">No account? <a href="#" onclick="showView('register');return false;">Create one</a></div>
+      </div>
+    </div>
+  </section>
+  <!-- USER REGISTER -->
+  <section class="view" id="view-register">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h3>Create your account</h3>
+        <p class="sub">Start chatting with Aida in seconds.</p>
+        <form onsubmit="doRegister(event)">
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input class="form-control" id="reg-name" placeholder="Jane Doe" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" id="reg-email" placeholder="you@example.com" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <div class="pass-wrap">
+              <input class="form-control" type="password" id="reg-pass" placeholder="At least 6 characters" minlength="6" required />
+              <button type="button" class="pass-toggle" onclick="togglePass('reg-pass',this)"><i class="bi bi-eye"></i></button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            <div class="pass-wrap">
+              <input class="form-control" type="password" id="reg-pass2" placeholder="Repeat password" minlength="6" required />
+              <button type="button" class="pass-toggle" onclick="togglePass('reg-pass2',this)"><i class="bi bi-eye"></i></button>
+            </div>
+          </div>
+          <div class="auth-error" id="reg-error"></div>
+          <button class="btn-grad w-100 mt-2" type="submit"><i class="bi bi-person-plus-fill"></i> Create account</button>
+        </form>
+        <div class="auth-switch">Already have an account? <a href="#" onclick="showView('login');return false;">Sign in</a></div>
+      </div>
+    </div>
+  </section>
+  <!-- ADMIN LOGIN (separate secured gate) -->
+  <section class="view" id="view-admin-login">
+    <div class="auth-wrap">
+      <div class="auth-card" style="text-align:center">
+        <div class="lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <h3>Admin Access</h3>
+        <p class="sub">This area is restricted. Enter admin credentials to continue.</p>
+        <form onsubmit="doAdminLogin(event)" style="text-align:left">
+          <div class="mb-3">
+            <label class="form-label">Admin Username</label>
+            <input class="form-control" id="admin-login-user" placeholder="Username" required autocomplete="off" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Admin Password</label>
+            <div class="pass-wrap">
+              <input class="form-control" type="password" id="admin-login-pass" placeholder="••••••••" required autocomplete="off" />
+              <button type="button" class="pass-toggle" onclick="togglePass('admin-login-pass',this)"><i class="bi bi-eye"></i></button>
+            </div>
+          </div>
+          <div class="auth-error" id="admin-login-error"></div>
+          <button class="btn-grad w-100 mt-2" type="submit"><i class="bi bi-shield-lock"></i> Authenticate</button>
+        </form>
+        <div class="auth-switch"><a href="#" onclick="showView('landing');return false;"><i class="bi bi-arrow-left"></i> Back to Home</a></div>
+        <div style="margin-top:1.2rem">
+          <span class="db-badge"><i class="bi bi-database-fill"></i> MongoDB Secured</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- CHAT (requires login) -->
+  <section class="view" id="view-chat">
+    <div class="chat-shell">
+      <aside class="sidebar">
+        <div class="side-profile">
+          <div class="avatar" id="user-avatar">U</div>
+          <div>
+            <div class="name" id="user-name">User</div>
+            <div class="em" id="user-email">user@aida.ai</div>
+          </div>
+        </div>
+        <div class="side-section">
+          <div class="side-title">Quick Actions</div>
+          <button class="btn-ghost w-100 mb-2" onclick="newChat()"><i class="bi bi-plus-circle"></i> New Chat</button>
+          <button class="btn-ghost w-100" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Sign out</button>
+        </div>
+        <div class="side-section">
+          <div class="side-title">Conversation History</div>
+        </div>
+        <div class="side-history" id="history-list"></div>
+      </aside>
+      <main class="chat-area">
+        <div class="chat-header">
+          <div class="title">
+            <div class="avatar" style="width:38px;height:38px"><i class="bi bi-heart-pulse-fill"></i></div>
+            <div>
+              <h6>Aida</h6>
+              <div class="status"><span class="dot"></span> Online · Diagnosing</div>
+            </div>
+          </div>
+          <button class="icon-btn" title="Clear chat" onclick="newChat()"><i class="bi bi-arrow-clockwise"></i></button>
+        </div>
+        <div class="chat-messages" id="messages"></div>
+        <div class="chat-input-wrap">
+          <div class="chat-input">
+            <i class="bi bi-emoji-smile text-muted"></i>
+            <input id="chat-input" type="text" placeholder="Describe your symptoms… e.g., I have a sore throat and fever" autocomplete="off" />
+            <button id="send-btn" class="send-btn" aria-label="Send"><i class="bi bi-send-fill"></i></button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+  <!-- ADMIN (requires admin auth) -->
+  <section class="view" id="view-admin">
+    <!-- Admin session bar -->
+    <div class="admin-session-bar">
+      <div class="admin-user"><i class="bi bi-shield-check"></i> Authenticated as <b style="margin-left:.3rem">Admin</b></div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="db-badge"><i class="bi bi-database-fill"></i> MongoDB</span>
+        <button class="admin-logout-btn" onclick="adminLogout()"><i class="bi bi-box-arrow-right"></i> Logout Admin</button>
+      </div>
+    </div>
+    <!-- Mobile admin nav bar -->
+    <div class="admin-mobile-bar" id="admin-mobile-nav">
+      <a class="active" onclick="adminTabMobile('dashboard',this)"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a onclick="adminTabMobile('users',this)"><i class="bi bi-people"></i> Users</a>
+      <a onclick="adminTabMobile('add',this)"><i class="bi bi-plus-square"></i> Add Disease</a>
+      <a onclick="adminTabMobile('library',this)"><i class="bi bi-journal-medical"></i> Library</a>
+      <a onclick="adminLogout()"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </div>
+    <div class="admin-shell">
+      <aside class="admin-side">
+        <a href="#" class="brand" onclick="showView('landing');return false;">
+          <div class="brand-logo"><i class="bi bi-heart-pulse-fill"></i></div>
+          <span>Aida Admin</span>
+        </a>
+        <nav class="admin-nav" id="admin-desktop-nav">
+          <a class="active" data-tab="dashboard" onclick="adminTab('dashboard',this)"><i class="bi bi-speedometer2"></i> Dashboard</a>
+          <a data-tab="users" onclick="adminTab('users',this)"><i class="bi bi-people"></i> Users</a>
+          <a data-tab="add" onclick="adminTab('add',this)"><i class="bi bi-plus-square"></i> Add Disease</a>
+          <a data-tab="library" onclick="adminTab('library',this)"><i class="bi bi-journal-medical"></i> Disease Library</a>
+          <a onclick="adminLogout()"><i class="bi bi-box-arrow-right"></i> Admin Logout</a>
+          <a onclick="showView('landing')"><i class="bi bi-house-door"></i> Home</a>
+        </nav>
+      </aside>
+      <main class="admin-main" id="admin-main-content">
+        <!-- Dashboard -->
+        <div class="admin-tab active" id="tab-dashboard">
+          <h3><i class="bi bi-speedometer2" style="color:var(--primary)"></i> Dashboard Overview</h3>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="icn"><i class="bi bi-eye"></i></div><div class="lbl">Page Visits</div><div class="val" id="s-visits">12,438</div><div class="delta">↑ 8.3% this week</div></div>
+            <div class="stat-card"><div class="icn"><i class="bi bi-person-plus"></i></div><div class="lbl">Registered Users</div><div class="val" id="s-signups">0</div><div class="delta" id="s-signups-delta"></div></div>
+            <div class="stat-card"><div class="icn"><i class="bi bi-people-fill"></i></div><div class="lbl">Total Diseases</div><div class="val" id="s-diseases">100</div><div class="delta">MongoDB collection</div></div>
+            <div class="stat-card"><div class="icn"><i class="bi bi-chat-square-text"></i></div><div class="lbl">Messages</div><div class="val" id="s-msgs">0</div><div class="delta" id="s-msgs-delta"></div></div>
+          </div>
+          <div class="chart-row">
+            <div class="panel"><h6><i class="bi bi-graph-up"></i> Messages — Last 7 Days</h6><div style="position:relative;height:220px"><canvas id="chart-msgs"></canvas></div></div>
+            <div class="panel"><h6><i class="bi bi-pie-chart"></i> User Activity</h6><div style="position:relative;height:220px"><canvas id="chart-pie"></canvas></div></div>
+          </div>
+          <div class="panel chart-single">
+            <h6><i class="bi bi-bar-chart"></i> Top Diagnosed Conditions</h6>
+            <div style="position:relative;height:200px"><canvas id="chart-bar"></canvas></div>
+          </div>
+        </div>
+        <!-- Users -->
+        <div class="admin-tab" id="tab-users" style="display:none">
+          <h3><i class="bi bi-people" style="color:var(--primary)"></i> Registered Users</h3>
+          <div class="panel">
+            <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+              <input class="form-control" style="max-width:320px" placeholder="🔍 Search users by email..." id="user-search-input" oninput="filterUsers(this.value)" />
+              <span class="text-muted" style="font-size:.85rem" id="user-count-label">0 users</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="aida-tbl" id="users-table">
+                <thead><tr><th>Email</th><th>Name</th><th>Joined</th><th>Messages</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- Add Disease -->
+        <div class="admin-tab" id="tab-add" style="display:none">
+          <h3><i class="bi bi-plus-square" style="color:var(--primary)"></i> Add New Disease</h3>
+          <div class="panel" style="max-width:780px">
+            <p class="text-muted small">Paste raw text below. Aida's NLP regex will auto-extract the name, symptoms, remedies, and prescriptions.</p>
+            <textarea class="form-control" id="raw-disease" placeholder="Name: Migraine
+Symptoms: throbbing headache, nausea, sensitivity to light, vomiting
+Remedies: Rest in a dark quiet room, cold compress, peppermint tea, hydrate well.
+Prescriptions: Ibuprofen 400mg or Sumatriptan - confirm with pharmacist for body suitability."></textarea>
+            <div class="d-flex gap-2 mt-3">
+              <button class="btn-grad" onclick="extractDisease()"><i class="bi bi-magic"></i> Auto-Extract & Save</button>
+              <button class="btn-ghost" onclick="clearExtractForm()">Clear</button>
+            </div>
+            <div class="extract-result" id="extract-out"></div>
+          </div>
+        </div>
+        <!-- Library -->
+        <div class="admin-tab" id="tab-library" style="display:none">
+          <h3><i class="bi bi-journal-medical" style="color:var(--primary)"></i> Disease Library <span class="text-muted" style="font-size:.95rem;font-weight:400">(<span id="lib-count">100</span> entries)</span></h3>
+          <div class="panel">
+            <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+              <input class="form-control" style="max-width:360px" placeholder="🔍 Search by name or symptom..." id="lib-search-input" oninput="filterDiseases(this.value)" />
+              <select class="form-control" style="max-width:160px" id="lib-severity-filter" onchange="filterDiseases(document.getElementById('lib-search-input').value)">
+                <option value="">All Severities</option>
+                <option value="minor">Minor</option>
+                <option value="moderate">Moderate</option>
+                <option value="major">Major</option>
+              </select>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="aida-tbl" id="lib-table">
+                <thead><tr><th>#</th><th>Disease</th><th>Symptoms</th><th>Severity</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="pagination-wrap" id="lib-pagination"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+</div>
+<script type="module">
+import * as THREE from 'three';
+const canvas = document.getElementById('bg-canvas');
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.z = 5;
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dir = new THREE.DirectionalLight(0x007BFF, 1.2);
+dir.position.set(5,5,5);
+scene.add(dir);
+const dir2 = new THREE.DirectionalLight(0x28A745, 0.8);
+dir2.position.set(-5,-3,3);
+scene.add(dir2);
+const heartGeo = new THREE.IcosahedronGeometry(1.2, 1);
+const heartMat = new THREE.MeshPhongMaterial({
+  color:0x007BFF, emissive:0x28A745, emissiveIntensity:0.18,
+  flatShading:true, transparent:true, opacity:0.85, wireframe:false
+});
+const heart = new THREE.Mesh(heartGeo, heartMat);
+scene.add(heart);
+const wireGeo = new THREE.IcosahedronGeometry(1.45, 1);
+const wireMat = new THREE.MeshBasicMaterial({color:0x28A745, wireframe:true, transparent:true, opacity:0.35});
+const wire = new THREE.Mesh(wireGeo, wireMat);
+scene.add(wire);
+const pCount = 280;
+const pGeo = new THREE.BufferGeometry();
+const pos = new Float32Array(pCount*3);
+for(let i=0;i<pCount;i++){
+  pos[i*3]=(Math.random()-0.5)*16;
+  pos[i*3+1]=(Math.random()-0.5)*10;
+  pos[i*3+2]=(Math.random()-0.5)*8;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+const pMat = new THREE.PointsMaterial({color:0x007BFF, size:0.05, transparent:true, opacity:0.6});
+const points = new THREE.Points(pGeo, pMat);
+scene.add(points);
+let t=0;
+function animate(){
+  requestAnimationFrame(animate);
+  t += 0.01;
+  const pulse = 1 + Math.sin(t*2.4)*0.06;
+  heart.scale.set(pulse,pulse,pulse);
+  heart.rotation.y += 0.004;
+  heart.rotation.x += 0.002;
+  wire.rotation.y -= 0.003;
+  wire.rotation.x -= 0.001;
+  points.rotation.y += 0.0008;
+  renderer.render(scene, camera);
+}
+animate();
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
 <script>
-// Supabase config
-const SUPABASE_URL = 'https://cfnsqeaqejwwhrwomlaw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmbnNxZWFxZWp3d2hyd29tbGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyMTcwMDAsImV4cCI6MjA1ODc5MzAwMH0.pH5lv8CVbr6iYtqtZyw8lg_VhRChnAQ';
-
-const state = { user: null, adminAuth: false };
-
-// Disease database
+/* ============ 100 DISEASES DATABASE ============ */
 const DISEASES = [
-{name:"Common Cold",symptoms:["runny nose","sneezing","sore throat","cough","congestion"],remedies:"Ginger-lemon-honey tea, rest.",prescriptions:"Paracetamol.",severity:"minor"},
-{name:"Flu",symptoms:["fever","body aches","chills","fatigue","cough","headache"],remedies:"Bed rest, fluids.",prescriptions:"Paracetamol, Oseltamivir.",severity:"moderate"},
-{name:"COVID-19",symptoms:["fever","dry cough","taste","smell","breath"],remedies:"Rest, hydrate.",prescriptions:"Paracetamol.",severity:"major"},
-{name:"Diabetes",symptoms:["urination","thirst","fatigue","vision"],remedies:"Diet, exercise.",prescriptions:"Metformin.",severity:"major"},
-{name:"Hypertension",symptoms:["headache","dizziness","chest pain","vision"],remedies:"Low salt, exercise.",prescriptions:"Amlodipine.",severity:"major"},
-{name:"Asthma",symptoms:["wheezing","breath","tightness","cough"],remedies:"Avoid triggers.",prescriptions:"Salbutamol.",severity:"major"},
-{name:"Migraine",symptoms:["headache","nausea","light","vomiting"],remedies:"Dark room.",prescriptions:"Ibuprofen.",severity:"moderate"},
-{name:"Gastritis",symptoms:["stomach pain","bloating","nausea","heartburn"],remedies:"Diet, coconut.",prescriptions:"Pantoprazole.",severity:"minor"},
-{name:"UTI",symptoms:["burning","frequency","cloudy"],remedies:"Water, cranberry.",prescriptions:"Nitrofurantoin.",severity:"moderate"},
-{name:"Anemia",symptoms:["fatigue","weakness","pale","dizziness"],remedies:"Iron foods.",prescriptions:"Ferrous sulfate.",severity:"moderate"},
-{name:"Sinusitis",symptoms:["facial pain","congestion","headache"],remedies:"Steam, saline.",prescriptions:"Pseudoephedrine.",severity:"minor"},
-{name:"Bronchitis",symptoms:["cough","mucus","chest","fatigue"],remedies:"Honey, fluids.",prescriptions:"Dextromethorphan.",severity:"moderate"},
-{name:"Allergies",symptoms:["sneezing","runny nose","itchy eyes"],remedies:"Avoid allergens.",prescriptions:"Cetirizine.",severity:"minor"},
-{name:"Conjunctivitis",symptoms:["red eyes","itchy","discharge"],remedies:"Warm compress.",prescriptions:"Eye drops.",severity:"minor"},
-{name:"Dengue",symptoms:["fever","headache","joint pain","rash"],remedies:"Papaya, rest.",prescriptions:"Paracetamol only.",severity:"major"},
-{name:"Malaria",symptoms:["fever","chills","sweating","headache"],remedies:"Hospital care.",prescriptions:"ACT therapy.",severity:"major"},
-{name:"Typhoid",symptoms:["fever","weakness","abdominal pain"],remedies:"Diet, rest.",prescriptions:"Ciprofloxacin.",severity:"major"},
-{name:"Tonsillitis",symptoms:["throat","swallowing","tonsils","fever"],remedies:"Gargle, fluids.",prescriptions:"Penicillin.",severity:"minor"},
-{name:"Appendicitis",symptoms:["pain","nausea","fever"],remedies:"Go to ER.",prescriptions:"Surgery.",severity:"major"},
-{name:"Kidney Stones",symptoms:["back pain","blood","painful urination"],remedies:"Water.",prescriptions:"Tamsulosin.",severity:"moderate"},
-{name:"Eczema",symptoms:["itchy","red","dry","cracked"],remedies:"Moisturizer.",prescriptions:"Hydrocortisone.",severity:"minor"},
-{name:"Psoriasis",symptoms:["scaly","itching","dry"],remedies:"Aloe, sun.",prescriptions:"Steroids.",severity:"moderate"},
-{name:"Acne",symptoms:["pimples","blackheads","oily"],remedies:"Cleansing.",prescriptions:"Benzoyl peroxide.",severity:"minor"},
-{name:"Constipation",symptoms:["hard stools","bloating","straining"],remedies:"Fiber, water.",prescriptions:"Lactulose.",severity:"minor"},
-{name:"Diarrhea",symptoms:["loose stools","cramps","dehydration"],remedies:"ORS, diet.",prescriptions:"Loperamide.",severity:"minor"},
-{name:"Food Poisoning",symptoms:["nausea","vomiting","diarrhea"],remedies:"Hydration.",prescriptions:"ORS.",severity:"moderate"},
-{name:"Arthritis",symptoms:["joint pain","stiffness","swelling"],remedies:"Exercise.",prescriptions:"Diclofenac.",severity:"moderate"},
-{name:"Osteoporosis",symptoms:["back pain","height loss"],remedies:"Calcium.",prescriptions:"Calcium.",severity:"moderate"},
-{name:"Depression",symptoms:["sadness","loss","fatigue","sleep"],remedies:"Therapy.",prescriptions:"SSRIs.",severity:"major"},
-{name:"Anxiety",symptoms:["worry","restlessness","heart"],remedies:"Breathing.",prescriptions:"SSRIs.",severity:"moderate"},
-{name:"Insomnia",symptoms:["sleep","fatigue","irritability"],remedies:"Hygiene.",prescriptions:"Melatonin.",severity:"minor"},
-{name:"Hypothyroidism",symptoms:["fatigue","weight gain","cold","dry"],remedies:"Iodine.",prescriptions:"Levothyroxine.",severity:"moderate"},
-{name:"Hyperthyroidism",symptoms:["weight loss","rapid heartbeat","sweating"],remedies:"Diet.",prescriptions:"Methimazole.",severity:"moderate"},
-{name:"PCOS",symptoms:["irregular","weight gain","acne"],remedies:"Diet.",prescriptions:"Metformin.",severity:"moderate"},
-{name:"Endometriosis",symptoms:["pelvic pain","painful periods"],remedies:"Heat.",prescriptions:"Hormones.",severity:"moderate"},
-{name:"Hemorrhoids",symptoms:["bleeding","itching","pain"],remedies:"Fiber.",prescriptions:"Cream.",severity:"minor"},
-{name:"Sciatica",symptoms:["back pain","leg pain","numbness"],remedies:"Stretch.",prescriptions:"Ibuprofen.",severity:"moderate"},
-{name:"Vertigo",symptoms:["dizziness","spinning","nausea"],remedies:"Epley.",prescriptions:"Meclizine.",severity:"minor"},
-{name:"Otitis",symptoms:["ear pain","drainage","fever"],remedies:"Warm compress.",prescriptions:"Amoxicillin.",severity:"minor"},
-{name:"Cataract",symptoms:["cloudy vision","light sensitivity"],remedies:"Diet.",prescriptions:"Surgery.",severity:"moderate"},
-{name:"Glaucoma",symptoms:["eye pain","vision loss"],remedies:"Checkup.",prescriptions:"Drops.",severity:"major"},
-{name:"Ringworm",symptoms:["circular rash","itching"],remedies:"Dry.",prescriptions:"Cream.",severity:"minor"},
-{name:"Athlete's Foot",symptoms:["itching","burning","peeling"],remedies:"Keep dry.",prescriptions:"Cream.",severity:"minor"},
-{name:"Herpes",symptoms:["blisters","pain","tingling"],remedies:"Ice.",prescriptions:"Acyclovir.",severity:"moderate"},
-{name:"Lung Cancer",symptoms:["cough","blood","weight loss"],remedies:"Checkup.",prescriptions:"Oncology.",severity:"major"},
-{name:"Heart Failure",symptoms:["breath","fatigue","swelling"],remedies:"Low sodium.",prescriptions:"Diuretics.",severity:"major"},
-{name:"Stroke",symptoms:["face droop","arm weakness","speech"],remedies:"Call 911!",prescriptions:"Emergency.",severity:"major"},
-{name:"Epilepsy",symptoms:["seizures","confusion"],remedies:"Safety.",prescriptions:"Anticonvulsants.",severity:"major"},
-{name:"Parkinson's",symptoms:["tremor","slow movement","stiffness"],remedies:"Exercise.",prescriptions:"Levodopa.",severity:"major"},
-{name:"Alzheimer's",symptoms:["memory loss","confusion"],remedies:"Mental stimulation.",prescriptions:"Donepezil.",severity:"major"},
-{name:"Crohn's",symptoms:["abdominal pain","diarrhea","weight loss"],remedies:"Diet.",prescriptions:"Mesalamine.",severity:"major"},
-{name:"IBS",symptoms:["bloating","diarrhea","constipation"],remedies:"Diet.",prescriptions:"Antispasmodics.",severity:"minor"},
-{name:"Gallstones",symptoms:["pain","nausea","vomiting"],remedies:"Diet.",prescriptions:"Surgery.",severity:"moderate"},
-{name:"Cirrhosis",symptoms:["jaundice","fatigue","swelling"],remedies:"No alcohol.",prescriptions:"Diuretics.",severity:"major"},
-{name:"Kidney Disease",symptoms:["fatigue","swelling","nausea"],remedies:"Low sodium.",prescriptions:"Dialysis.",severity:"major"},
-{name:"Prostate",symptoms:["urination problems","frequency"],remedies:"Screening.",prescriptions:"Finasteride.",severity:"moderate"},
-{name:"Breast Cancer",symptoms:["lump","shape change"],remedies:"Checkup.",prescriptions:"Oncology.",severity:"major"},
-{name:"Skin Cancer",symptoms:["new mole","changing mole"],remedies:"Protection.",prescriptions:"Biopsy.",severity:"major"},
-{name:"Lupus",symptoms:["rash","joint pain","fatigue"],remedies:"Sun protection.",prescriptions:"Hydroxychloroquine.",severity:"major"},
-{name:"Fibromyalgia",symptoms:["widespread pain","fatigue","sleep"],remedies:"Exercise.",prescriptions:"Pregabalin.",severity:"moderate"},
-{name:"Chronic Fatigue",symptoms:["extreme fatigue","unrefreshing sleep"],remedies:"Pacing.",prescriptions:"Symptomatic.",severity:"moderate"},
-{name:"Lyme Disease",symptoms:["bull's eye rash","fever","chills"],remedies:"Early treatment.",prescriptions:"Doxycycline.",severity:"moderate"},
-{name:"Pneumonia",symptoms:["cough","fever","chills","breath"],remedies:"Rest.",prescriptions:"Antibiotics.",severity:"major"},
-{name:"Tuberculosis",symptoms:["cough","weight loss","night sweats"],remedies:"DOTS.",prescriptions:"Isoniazid.",severity:"major"},
-{name:"Hepatitis B",symptoms:["jaundice","fatigue","abdominal pain"],remedies:"Rest.",prescriptions:"Tenofovir.",severity:"major"},
-{name:"Cholera",symptoms:["watery diarrhea","vomiting"],remedies:"ORS immediately.",prescriptions:"Antibiotics.",severity:"major"},
-{name:"Rabies",symptoms:["fever","anxiety","fear of water"],remedies:"Post-exposure care.",prescriptions:"Vaccine.",severity:"major"},
-{name:"Tetanus",symptoms:["stiffness","jaw locking"],remedies:"Clean wound.",prescriptions:"IG.",severity:"major"},
-{name:"Measles",symptoms:["fever","rash","cough","red eyes"],remedies:"Rest.",prescriptions:"Supportive.",severity:"moderate"},
-{name:"Chickenpox",symptoms:["itchy rash","blisters","fever"],remedies:"Calamine.",prescriptions:"Acyclovir.",severity:"moderate"},
-{name:"Mumps",symptoms:["swollen glands","fever","fatigue"],remedies:"Rest.",prescriptions:"Supportive.",severity:"moderate"},
-{name:"Rubella",symptoms:["rash","fever","swollen lymph"],remedies:"Rest.",prescriptions:"Supportive.",severity:"minor"},
-{name:"Whooping Cough",symptoms:["cough","whoop","vomiting"],remedies:"Rest.",prescriptions:"Antibiotics.",severity:"moderate"},
-{name:"Scabies",symptoms:["itching","rash","burrows"],remedies:"Keep clean.",prescriptions:"Permethrin.",severity:"minor"},
-{name:"Cellulitis",symptoms:["red","swollen","warm","fever"],remedies:"Elevate.",prescriptions:"Antibiotics.",severity:"moderate"},
-{name:"Sepsis",symptoms:["fever","confusion","rapid breathing"],remedies:"ER immediately.",prescriptions:"Emergency.",severity:"major"},
-{name:"Meningitis",symptoms:["stiff neck","fever","headache","sensitivity"],remedies:"ER immediately.",prescriptions:"Emergency.",severity:"major"},
-{name:"Encephalitis",symptoms:["fever","headache","confusion","seizures"],remedies:"ER immediately.",prescriptions:"Emergency.",severity:"major"},
-{name:"HIV",symptoms:["flu-like","weight loss","infections"],remedies:"Early testing.",prescriptions:"ARVs.",severity:"major"},
-{name:"AIDS",symptoms:["opportunistic infections","weight loss"],remedies:"ARV therapy.",prescriptions:"ARVs.",severity:"major"},
-{name:"Syphilis",symptoms:["chancre","rash","flu"],remedies:"Testing.",prescriptions:"Penicillin.",severity:"moderate"},
-{name:"Gonorrhea",symptoms:["discharge","pain","burning"],remedies:"Testing.",prescriptions:"Antibiotics.",severity:"moderate"},
-{name:"Chlamydia",symptoms:["discharge","pain"],remedies:"Testing.",prescriptions:"Antibiotics.",severity:"minor"},
-{name:"Herpes Zoster",symptoms:["painful rash","blisters","nerve pain"],remedies:"Keep dry.",prescriptions:"Acyclovir.",severity:"moderate"},
-{name:"Thrush",symptoms:["white patches","pain","taste loss"],remedies:"Diet.",prescriptions:"Nystatin.",severity:"minor"},
-{name:"Candidiasis",symptoms:["itching","redness","discharge"],remedies:"Keep dry.",prescriptions:"Fluconazole.",severity:"minor"},
-{name:"Trichomoniasis",symptoms:["discharge","itching","odor"],remedies:"Testing.",prescriptions:"Metronidazole.",severity:"minor"},
-{name:"Bacterial Vaginosis",symptoms:["discharge","odor"],remedies:"Probiotics.",prescriptions:"Metronidazole.",severity:"minor"},
-{name:"Yeast Infection",symptoms:["itching","burning","discharge"],remedies:"Keep dry.",prescriptions:"Fluconazole.",severity:"minor"},
-{name:"Hemophilia",symptoms:["easy bruising","bleeding","joint pain"],remedies:"Avoid injury.",prescriptions:"Factor replacement.",severity:"major"},
-{name:"Sickle Cell",symptoms:["pain crises","fatigue","jaundice"],remedies:"Hydration.",prescriptions:"Hydroxyurea.",severity:"major"},
-{name:"Leukemia",symptoms:["fatigue","bruising","frequent infections"],remedies:"Testing.",prescriptions:"Oncology.",severity:"major"},
-{name:"Lymphoma",symptoms:["swollen glands","fever","weight loss"],remedies:"Testing.",prescriptions:"Oncology.",severity:"major"},
-{name:"Myeloma",symptoms:["bone pain","fatigue","infections"],remedies:"Testing.",prescriptions:"Oncology.",severity:"major"},
-{name:"Brain Tumor",symptoms:["headaches","seizures","vision changes"],remedies:"MRI.",prescriptions:"Oncology.",severity:"major"},
-{name:"Pancreatic Cancer",symptoms:["jaundice","weight loss","back pain"],remedies:"Testing.",prescriptions:"Oncology.",severity:"major"},
-{name:"Ovarian Cancer",symptoms:["bloating","pelvic pain","early satiety"],remedies:"Testing.",prescriptions:"Oncology.",severity:"major"},
-{name:"Cervical Cancer",symptoms:["abnormal bleeding","pelvic pain"],remedies:"Pap smear.",prescriptions:"Oncology.",severity:"major"},
-{name:"Testicular Cancer",symptoms:["lump","swelling","pain"],remedies:"Self-exam.",prescriptions:"Oncology.",severity:"moderate"},
-{name:"Prostate Cancer",symptoms:["urination problems","bone pain"],remedies:"PSAs.",prescriptions:"Oncology.",severity:"major"},
-{name:"Colon Cancer",symptoms:["blood in stool","change in habits","weight loss"],remedies:"Colonoscopy.",prescriptions:"Oncology.",severity:"major"},
-{name:"Rectal Cancer",symptoms:["bleeding","pain","change in habits"],remedies:"Screening.",prescriptions:"Oncology.",severity:"major"},
-{name:"Esophageal Cancer",symptoms:["difficulty swallowing","weight loss","pain"],remedies:"Testing.",prescriptions:"Oncology.",severity:"major"},
-{name:"Liver Cancer",symptoms:["jaundice","abdominal pain","weight loss"],remedies:"Ultrasound.",prescriptions:"Oncology.",severity:"major"},
-{name:"Kidney Cancer",symptoms:["blood in urine","back pain","weight loss"],remedies:"CT scan.",prescriptions:"Oncology.",severity:"major"},
-{name:"Bladder Cancer",symptoms:["blood in urine","urination changes"],remedies:"Cystoscopy.",prescriptions:"Oncology.",severity:"major"},
-{name:"Thyroid Cancer",symptoms:["lump","hoarseness","difficulty swallowing"],remedies:"Ultrasound.",prescriptions:"Oncology.",severity:"moderate"},
-{name:"Bone Cancer",symptoms:["pain","swelling","fractures"],remedies:"X-ray.",prescriptions:"Oncology.",severity:"major"},
-{name:"Soft Tissue Sarcoma",symptoms:["painless lump","swelling"],remedies:"Biopsy.",prescriptions:"Oncology.",severity:"major"},
-{name:"Melanoma",symptoms:["changing mole","irregular borders","multiple colors"],remedies:"Skin check.",prescriptions:"Surgery.",severity:"major"},
-{name:"Basal Cell",symptoms:["pearly bump","red patch"],remedies:"Sun protection.",prescriptions:"Surgery.",severity:"moderate"},
-{name:"Squamous Cell",symptoms:["scaly patch","open sore"],remedies:"Sun protection.",prescriptions:"Surgery.",severity:"moderate"},
-{name:"Neurofibromatosis",symptoms:["cafe au lait spots","neurofibromas"],remedies:"Monitoring.",prescriptions:"Surgery.",severity:"moderate"},
-{name:"Marfan Syndrome",symptoms:["tall stature","long limbs","heart issues"],remedies:"Cardiology.",prescriptions:"Beta blockers.",severity:"moderate"},
-{name:"Ehlers-Danlos",symptoms:["flexible joints","skin fragility","bruising"],remedies:"Protection.",prescriptions:"Supportive.",severity:"moderate"},
-{name:"Huntington's",symptoms:["involuntary movements","cognitive decline","personality changes"],remedies:"Testing.",prescriptions:"Tetrabenazine.",severity:"major"},
-{name:"ALS",symptoms:["muscle weakness","twitching","difficulty speaking"],remedies:"Support.",prescriptions:"Riluzole.",severity:"major"},
-{name:"MS",symptoms:["numbness","weakness","vision problems","fatigue"],remedies:"Exercise.",prescriptions:"Interferon.",severity:"major"},
-{name:"Myasthenia",symptoms:["drooping eyelids","double vision","muscle weakness"],remedies:"Rest.",prescriptions:"Pyridostigmine.",severity:"major"},
-{name:"Guillain-Barre",symptoms:["weakness","tingling","difficulty walking"],remedies:"Hospital.",prescriptions:"IVIG.",severity:"major"},
-{name:"CIDP",symptoms:["progressive weakness","numbness"],remedies:"Therapy.",prescriptions:"Steroids.",severity:"moderate"},
-{name:"Dystonia",symptoms:["involuntary muscle contractions","posture"],remedies:"BOTOX.",prescriptions:"BOTOX.",severity:"moderate"},
-{name:"Tardive Dyskinesia",symptoms:["involuntary movements","lip smacking"],remedies:"Stop medication.",prescriptions:"VMAT2 inhibitors.",severity:"moderate"},
-{name:"Restless Leg",symptoms:["urge to move legs","tingling","night"],remedies:"Exercise.",prescriptions:"Pramipexole.",severity:"minor"},
-{name:"Sleep Apnea",symptoms:["snoring","gasping","daytime sleepiness"],remedies:"Weight loss.",prescriptions:"CPAP.",severity:"moderate"},
-{name:"Narcolepsy",symptoms:["sudden sleep","cataplexy","hallucinations"],remedies:"Sleep hygiene.",prescriptions:"Modafinil.",severity:"moderate"},
-{name:"Parasomnia",symptoms:["sleepwalking","night terrors"],remedies:"Safety.",prescriptions:"Melatonin.",severity:"minor"},
-{name:"Circadian Rhythm",symptoms:["sleep pattern disruption","insomnia"],remedies:"Light therapy.",prescriptions:"Melatonin.",severity:"minor"},
-{name:"PLMD",symptoms:["leg movements during sleep"],remedies:"Sleep study.",prescriptions:"Dopamine.",severity:"minor"}
+  {name:"Common Cold",symptoms:["runny nose","sneezing","sore throat","cough","congestion","mild fever"],remedies:"Ginger-lemon-honey tea 2-3x/day. Steam inhalation. Rest and hydrate.",prescriptions:"Paracetamol 500mg, Cetirizine 10mg — confirm with pharmacist.",severity:"minor"},
+  {name:"Influenza (Flu)",symptoms:["high fever","body aches","chills","fatigue","cough","headache","sore throat"],remedies:"Bed rest, warm fluids, chicken broth, vitamin C rich foods.",prescriptions:"Oseltamivir (Tamiflu), Paracetamol — pharmacist confirmation required.",severity:"moderate"},
+  {name:"COVID-19",symptoms:["fever","dry cough","loss of taste","loss of smell","shortness of breath","fatigue","body ache"],remedies:"Isolate, hydrate, steam inhalation, vitamin D & zinc, monitor SpO2.",prescriptions:"Paracetamol, follow physician protocol — see doctor immediately.",severity:"major"},
+  {name:"Diabetes Type 2",symptoms:["frequent urination","excessive thirst","fatigue","blurred vision","slow healing","weight loss"],remedies:"Low-carb diet, fenugreek seeds water, regular exercise, bitter gourd juice.",prescriptions:"Metformin 500mg — strictly under doctor supervision.",severity:"major"},
+  {name:"Hypertension",symptoms:["headache","dizziness","chest pain","blurred vision","nosebleeds","shortness of breath"],remedies:"Reduce salt, DASH diet, beetroot juice, garlic, daily walking, meditation.",prescriptions:"Amlodipine 5mg, Losartan — doctor's prescription mandatory.",severity:"major"},
+  {name:"Asthma",symptoms:["wheezing","shortness of breath","chest tightness","cough","difficulty breathing"],remedies:"Avoid triggers, steam inhalation, ginger-honey, breathing exercises.",prescriptions:"Salbutamol inhaler, Budesonide — pharmacist guidance.",severity:"major"},
+  {name:"Pneumonia",symptoms:["cough with phlegm","high fever","chills","shortness of breath","chest pain","fatigue"],remedies:"Hospital care often needed. Warm fluids, rest, humidifier.",prescriptions:"Amoxicillin, Azithromycin — antibiotics need doctor.",severity:"major"},
+  {name:"Tuberculosis",symptoms:["persistent cough","blood in sputum","weight loss","night sweats","fever","fatigue"],remedies:"DOTS therapy compliance, nutritious diet, isolation.",prescriptions:"Isoniazid, Rifampicin — strict doctor supervised regimen.",severity:"major"},
+  {name:"Migraine",symptoms:["throbbing headache","nausea","light sensitivity","sound sensitivity","vomiting","aura"],remedies:"Dark quiet room, cold compress, peppermint tea, hydration.",prescriptions:"Ibuprofen 400mg, Sumatriptan — confirm with pharmacist.",severity:"moderate"},
+  {name:"Gastritis",symptoms:["stomach pain","bloating","nausea","vomiting","loss of appetite","heartburn"],remedies:"Avoid spicy/oily food, coconut water, banana, small frequent meals.",prescriptions:"Pantoprazole 40mg, Ranitidine — pharmacist confirmation.",severity:"minor"},
+  {name:"Acid Reflux (GERD)",symptoms:["heartburn","regurgitation","chest pain","difficulty swallowing","sour taste","cough"],remedies:"Avoid late meals, elevate head, ginger tea, fennel seeds.",prescriptions:"Omeprazole 20mg — pharmacist guidance.",severity:"minor"},
+  {name:"Urinary Tract Infection",symptoms:["burning urination","frequent urination","cloudy urine","pelvic pain","strong urine odor"],remedies:"Cranberry juice, plenty of water, coconut water, probiotic yogurt.",prescriptions:"Nitrofurantoin, Ciprofloxacin — antibiotics need doctor.",severity:"moderate"},
+  {name:"Anemia",symptoms:["fatigue","weakness","pale skin","shortness of breath","dizziness","cold hands"],remedies:"Iron-rich foods (spinach, dates, beetroot), vitamin C with meals.",prescriptions:"Ferrous sulfate, Folic acid — pharmacist guidance.",severity:"moderate"},
+  {name:"Sinusitis",symptoms:["facial pain","nasal congestion","thick mucus","headache","reduced smell","cough"],remedies:"Steam inhalation, saline nasal rinse, warm compress, turmeric milk.",prescriptions:"Pseudoephedrine, Amoxicillin if bacterial — pharmacist.",severity:"minor"},
+  {name:"Bronchitis",symptoms:["persistent cough","mucus production","chest discomfort","fatigue","mild fever","wheezing"],remedies:"Honey, steam, warm fluids, rest, avoid smoking.",prescriptions:"Dextromethorphan, antibiotics if bacterial — pharmacist.",severity:"moderate"},
+  {name:"Allergic Rhinitis",symptoms:["sneezing","runny nose","itchy eyes","nasal congestion","itchy throat"],remedies:"Avoid allergens, saline rinse, local honey, HEPA filters.",prescriptions:"Loratadine 10mg, Cetirizine — pharmacist confirmation.",severity:"minor"},
+  {name:"Conjunctivitis",symptoms:["red eyes","itchy eyes","watery discharge","eyelid swelling","gritty feeling"],remedies:"Warm compress, avoid touching, separate towels, rose water.",prescriptions:"Antibiotic eye drops if bacterial — pharmacist.",severity:"minor"},
+  {name:"Chickenpox",symptoms:["itchy rash","blisters","fever","fatigue","headache","loss of appetite"],remedies:"Calamine lotion, oatmeal bath, neem leaves bath, isolate.",prescriptions:"Acyclovir, Calamine — pharmacist confirmation.",severity:"moderate"},
+  {name:"Measles",symptoms:["high fever","rash","cough","runny nose","red eyes","koplik spots"],remedies:"Vitamin A, hydration, isolation, rest, lukewarm sponge.",prescriptions:"Symptomatic — see doctor; vaccine prevention key.",severity:"moderate"},
+  {name:"Dengue Fever",symptoms:["high fever","severe headache","joint pain","muscle pain","rash","eye pain"],remedies:"Papaya leaf juice, coconut water, hydration, rest, monitor platelets.",prescriptions:"Paracetamol ONLY (no aspirin/NSAIDs) — see doctor.",severity:"major"},
+  {name:"Malaria",symptoms:["cyclic fever","chills","sweating","headache","nausea","muscle pain"],remedies:"Hospital care, hydration, mosquito control.",prescriptions:"Artemisinin combination therapy — strict doctor.",severity:"major"},
+  {name:"Typhoid",symptoms:["prolonged fever","weakness","abdominal pain","headache","loss of appetite","rose spots"],remedies:"Boiled water, soft diet, rest, hygiene.",prescriptions:"Ciprofloxacin, Azithromycin — doctor required.",severity:"major"},
+  {name:"Cholera",symptoms:["watery diarrhea","vomiting","dehydration","muscle cramps","rapid heart rate"],remedies:"ORS immediately, zinc supplements, boiled water.",prescriptions:"Doxycycline, IV fluids — emergency.",severity:"major"},
+  {name:"Hepatitis A",symptoms:["jaundice","fatigue","abdominal pain","nausea","loss of appetite","dark urine"],remedies:"Rest, avoid alcohol/fatty food, sugarcane juice, hydration.",prescriptions:"Supportive — consult doctor.",severity:"moderate"},
+  {name:"Hepatitis B",symptoms:["jaundice","fatigue","abdominal pain","joint pain","nausea","dark urine"],remedies:"Rest, low-fat diet, milk thistle, avoid alcohol.",prescriptions:"Tenofovir, Entecavir — strict doctor.",severity:"major"},
+  {name:"Tonsillitis",symptoms:["sore throat","difficulty swallowing","swollen tonsils","fever","white patches","ear pain"],remedies:"Salt water gargle, warm fluids, honey, throat lozenges.",prescriptions:"Penicillin, Amoxicillin — pharmacist.",severity:"minor"},
+  {name:"Appendicitis",symptoms:["lower right abdominal pain","nausea","vomiting","fever","loss of appetite","bloating"],remedies:"EMERGENCY — go to hospital immediately. No food/water.",prescriptions:"Surgery required — emergency.",severity:"major"},
+  {name:"Kidney Stones",symptoms:["severe back pain","blood in urine","painful urination","nausea","frequent urination"],remedies:"Plenty of water, lemon juice, basil leaves, reduce oxalate.",prescriptions:"Tamsulosin, pain relief — pharmacist; surgery if large.",severity:"moderate"},
+  {name:"Eczema",symptoms:["itchy skin","red patches","dry skin","cracked skin","scaly patches"],remedies:"Coconut oil, oatmeal bath, moisturize, avoid triggers.",prescriptions:"Hydrocortisone cream — pharmacist.",severity:"minor"},
+  {name:"Psoriasis",symptoms:["red scaly patches","itching","dry skin","thick nails","joint pain"],remedies:"Aloe vera, sun exposure, fish oil, stress management.",prescriptions:"Topical steroids, Methotrexate — doctor.",severity:"moderate"},
+  {name:"Acne",symptoms:["pimples","blackheads","whiteheads","oily skin","face redness"],remedies:"Tea tree oil, honey mask, gentle cleansing, drink water.",prescriptions:"Benzoyl peroxide, Retinoids — pharmacist.",severity:"minor"},
+  {name:"Athlete's Foot",symptoms:["itching feet","burning sensation","cracked skin","peeling","blisters"],remedies:"Keep feet dry, tea tree oil, vinegar soak, breathable shoes.",prescriptions:"Clotrimazole, Terbinafine cream — pharmacist.",severity:"minor"},
+  {name:"Ringworm",symptoms:["circular rash","itching","red patches","scaly skin","hair loss in patches"],remedies:"Garlic paste, tea tree oil, keep area dry, hygiene.",prescriptions:"Antifungal cream — pharmacist.",severity:"minor"},
+  {name:"Constipation",symptoms:["infrequent bowel movements","hard stools","straining","bloating","abdominal pain"],remedies:"Fiber-rich diet, prunes, water, exercise, flaxseed.",prescriptions:"Lactulose, Isabgol — pharmacist.",severity:"minor"},
+  {name:"Diarrhea",symptoms:["loose stools","abdominal cramps","dehydration","nausea","fever"],remedies:"ORS, BRAT diet, coconut water, probiotic yogurt.",prescriptions:"Loperamide, ORS — pharmacist.",severity:"minor"},
+  {name:"Food Poisoning",symptoms:["nausea","vomiting","diarrhea","abdominal cramps","fever","weakness"],remedies:"Hydration, ORS, ginger tea, BRAT diet, rest.",prescriptions:"ORS, Ondansetron if severe — pharmacist.",severity:"moderate"},
+  {name:"Arthritis",symptoms:["joint pain","stiffness","swelling","reduced range of motion","warmth in joints"],remedies:"Turmeric milk, ginger, omega-3, gentle exercise, hot/cold therapy.",prescriptions:"Diclofenac, Glucosamine — pharmacist.",severity:"moderate"},
+  {name:"Osteoporosis",symptoms:["back pain","loss of height","stooped posture","easy bone fracture"],remedies:"Calcium-rich foods, vitamin D, weight-bearing exercise, sunlight.",prescriptions:"Calcium, Alendronate — doctor.",severity:"moderate"},
+  {name:"Gout",symptoms:["sudden joint pain","redness","swelling","warmth","big toe pain","tenderness"],remedies:"Cherry juice, hydration, avoid red meat/alcohol, lemon water.",prescriptions:"Allopurinol, Colchicine — pharmacist.",severity:"moderate"},
+  {name:"Depression",symptoms:["persistent sadness","loss of interest","fatigue","sleep changes","appetite changes","hopelessness"],remedies:"Therapy, exercise, sunlight, social support, meditation.",prescriptions:"SSRIs (Sertraline) — psychiatrist required.",severity:"major"},
+  {name:"Anxiety Disorder",symptoms:["excessive worry","restlessness","rapid heartbeat","sweating","trouble sleeping","panic"],remedies:"Deep breathing, yoga, meditation, chamomile tea, therapy.",prescriptions:"SSRIs, Buspirone — psychiatrist.",severity:"moderate"},
+  {name:"Insomnia",symptoms:["difficulty falling asleep","waking frequently","early waking","fatigue","irritability"],remedies:"Sleep hygiene, warm milk, no screens before bed, lavender oil.",prescriptions:"Melatonin, Zolpidem — pharmacist.",severity:"minor"},
+  {name:"Hypothyroidism",symptoms:["fatigue","weight gain","cold intolerance","dry skin","hair loss","constipation"],remedies:"Iodine-rich foods, selenium, ashwagandha, regular check-ups.",prescriptions:"Levothyroxine — doctor mandatory.",severity:"moderate"},
+  {name:"Hyperthyroidism",symptoms:["weight loss","rapid heartbeat","sweating","nervousness","tremors","heat intolerance"],remedies:"Avoid iodine excess, stress management, cooling foods.",prescriptions:"Methimazole, Propranolol — doctor.",severity:"moderate"},
+  {name:"PCOS",symptoms:["irregular periods","weight gain","acne","excess hair","hair thinning","infertility"],remedies:"Low-glycemic diet, exercise, spearmint tea, weight management.",prescriptions:"Metformin, OCPs — gynecologist.",severity:"moderate"},
+  {name:"Endometriosis",symptoms:["pelvic pain","painful periods","heavy bleeding","painful intercourse","infertility"],remedies:"Heat therapy, anti-inflammatory diet, omega-3, yoga.",prescriptions:"Hormonal therapy — gynecologist.",severity:"moderate"},
+  {name:"Breast Cancer",symptoms:["breast lump","skin changes","nipple discharge","breast pain","swelling","skin dimpling"],remedies:"EARLY screening critical. Healthy diet, exercise, no smoking.",prescriptions:"Chemotherapy, Tamoxifen — oncologist immediately.",severity:"major"},
+  {name:"Lung Cancer",symptoms:["persistent cough","chest pain","weight loss","blood in sputum","shortness of breath","hoarseness"],remedies:"Quit smoking, antioxidant diet, early screening.",prescriptions:"Chemo, targeted therapy — oncologist.",severity:"major"},
+  {name:"Prostate Cancer",symptoms:["frequent urination","weak urine flow","blood in urine","pelvic discomfort","bone pain"],remedies:"Tomatoes (lycopene), green tea, regular PSA testing.",prescriptions:"Hormone therapy, surgery — urologist/oncologist.",severity:"major"},
+  {name:"Skin Cancer (Melanoma)",symptoms:["new mole","changing mole","asymmetric mole","irregular borders","color changes"],remedies:"Sunscreen, avoid tanning, regular skin checks, vitamin D.",prescriptions:"Surgical excision — dermatologist/oncologist.",severity:"major"},
+  {name:"Heart Attack",symptoms:["chest pain","arm pain","shortness of breath","sweating","nausea","jaw pain"],remedies:"EMERGENCY — call ambulance. Chew aspirin if available.",prescriptions:"Emergency hospital care.",severity:"major"},
+  {name:"Stroke",symptoms:["face drooping","arm weakness","speech difficulty","sudden confusion","vision loss","severe headache"],remedies:"EMERGENCY — call ambulance immediately. FAST test.",prescriptions:"Emergency hospital — tPA if early.",severity:"major"},
+  {name:"Epilepsy",symptoms:["seizures","loss of consciousness","convulsions","staring spells","confusion","muscle jerks"],remedies:"Avoid triggers, sleep well, stress management, ketogenic diet.",prescriptions:"Phenytoin, Valproate — neurologist.",severity:"major"},
+  {name:"Alzheimer's",symptoms:["memory loss","confusion","difficulty with tasks","language problems","mood changes"],remedies:"Mental exercises, social engagement, Mediterranean diet, omega-3.",prescriptions:"Donepezil, Memantine — neurologist.",severity:"major"},
+  {name:"Parkinson's",symptoms:["tremors","slow movement","muscle rigidity","balance problems","speech changes"],remedies:"Regular exercise, tai chi, balanced diet, support groups.",prescriptions:"Levodopa, Carbidopa — neurologist.",severity:"major"},
+  {name:"Multiple Sclerosis",symptoms:["numbness","weakness","vision problems","fatigue","balance issues","tingling"],remedies:"Vitamin D, omega-3, exercise, stress management, cool environment.",prescriptions:"Interferon, Glatiramer — neurologist.",severity:"major"},
+  {name:"Lupus",symptoms:["butterfly rash","joint pain","fatigue","fever","photosensitivity","hair loss"],remedies:"Sun protection, anti-inflammatory diet, gentle exercise, rest.",prescriptions:"Hydroxychloroquine — rheumatologist.",severity:"major"},
+  {name:"Crohn's Disease",symptoms:["abdominal pain","diarrhea","weight loss","fatigue","blood in stool","reduced appetite"],remedies:"Low-fiber during flares, small meals, hydration, avoid triggers.",prescriptions:"Mesalamine, biologics — gastroenterologist.",severity:"major"},
+  {name:"Ulcerative Colitis",symptoms:["bloody diarrhea","abdominal pain","urgency","weight loss","fatigue","fever"],remedies:"Bland diet, probiotics, stress management, omega-3.",prescriptions:"Mesalamine, steroids — gastroenterologist.",severity:"major"},
+  {name:"IBS",symptoms:["abdominal pain","bloating","diarrhea","constipation","mucus in stool","gas"],remedies:"Low-FODMAP diet, peppermint oil, probiotics, stress management.",prescriptions:"Antispasmodics, Loperamide — pharmacist.",severity:"minor"},
+  {name:"Hemorrhoids",symptoms:["rectal bleeding","itching","pain during bowel movement","swelling","discomfort"],remedies:"High-fiber diet, sitz bath, witch hazel, avoid straining.",prescriptions:"Hydrocortisone cream, stool softeners — pharmacist.",severity:"minor"},
+  {name:"Varicose Veins",symptoms:["bulging veins","leg pain","heaviness","swelling","skin discoloration","cramps"],remedies:"Elevate legs, compression stockings, exercise, avoid long standing.",prescriptions:"Sclerotherapy — vascular specialist.",severity:"minor"},
+  {name:"Chronic Kidney Disease",symptoms:["fatigue","swelling","decreased urination","nausea","muscle cramps","itching"],remedies:"Low-sodium diet, control BP/diabetes, hydration, avoid NSAIDs.",prescriptions:"BP meds, dialysis — nephrologist.",severity:"major"},
+  {name:"Liver Cirrhosis",symptoms:["jaundice","fatigue","easy bruising","swollen abdomen","confusion","loss of appetite"],remedies:"NO alcohol, low-sodium, milk thistle, balanced diet.",prescriptions:"Diuretics, Lactulose — hepatologist.",severity:"major"},
+  {name:"Gallstones",symptoms:["upper right abdominal pain","nausea","vomiting","back pain","jaundice","bloating"],remedies:"Low-fat diet, apple cider vinegar, exercise, hydration.",prescriptions:"Pain relief, Ursodiol; surgery often — doctor.",severity:"moderate"},
+  {name:"Pancreatitis",symptoms:["upper abdominal pain","nausea","vomiting","fever","rapid pulse","tender abdomen"],remedies:"NPO during attack, hydration, no alcohol, low-fat diet.",prescriptions:"IV fluids, pain meds — hospital.",severity:"major"},
+  {name:"Glaucoma",symptoms:["eye pain","blurred vision","halos around lights","headache","nausea","vision loss"],remedies:"Regular eye exams, healthy diet, exercise, avoid eye strain.",prescriptions:"Timolol drops, Latanoprost — ophthalmologist.",severity:"major"},
+  {name:"Cataract",symptoms:["cloudy vision","sensitivity to light","faded colors","double vision","poor night vision"],remedies:"Antioxidants, sunglasses, healthy diet, regular eye exams.",prescriptions:"Surgery — ophthalmologist.",severity:"moderate"},
+  {name:"Otitis Media",symptoms:["ear pain","ear drainage","hearing loss","fever","irritability","balance problems"],remedies:"Warm compress, garlic oil drops, hydration, rest.",prescriptions:"Amoxicillin if bacterial — pharmacist.",severity:"minor"},
+  {name:"Vertigo",symptoms:["dizziness","spinning sensation","nausea","balance problems","headache","sweating"],remedies:"Epley maneuver, ginger tea, hydration, avoid sudden movements.",prescriptions:"Meclizine, Betahistine — pharmacist.",severity:"minor"},
+  {name:"Sciatica",symptoms:["lower back pain","leg pain","numbness","tingling","weakness in leg","burning sensation"],remedies:"Stretching, hot/cold therapy, yoga, good posture.",prescriptions:"Ibuprofen, muscle relaxants — pharmacist.",severity:"moderate"},
+  {name:"Carpal Tunnel Syndrome",symptoms:["hand numbness","tingling","weakness","pain in wrist","night symptoms","grip weakness"],remedies:"Wrist splint, stretches, ergonomic adjustments, ice.",prescriptions:"NSAIDs, steroid injections — doctor.",severity:"minor"},
+  {name:"Fibromyalgia",symptoms:["widespread pain","fatigue","sleep problems","cognitive difficulties","mood changes"],remedies:"Gentle exercise, yoga, stress management, sleep hygiene, magnesium.",prescriptions:"Pregabalin, Duloxetine — doctor.",severity:"moderate"},
+  {name:"Chronic Fatigue Syndrome",symptoms:["extreme fatigue","unrefreshing sleep","cognitive issues","muscle pain","headaches"],remedies:"Pacing activities, sleep hygiene, balanced diet, gentle exercise.",prescriptions:"Symptomatic — doctor.",severity:"moderate"},
+  {name:"Sleep Apnea",symptoms:["loud snoring","gasping during sleep","daytime sleepiness","morning headache","dry mouth"],remedies:"Weight loss, side sleeping, avoid alcohol, CPAP if severe.",prescriptions:"CPAP machine — sleep specialist.",severity:"moderate"},
+  {name:"Obesity",symptoms:["excess weight","shortness of breath","joint pain","fatigue","sleep problems","sweating"],remedies:"Calorie deficit, exercise, whole foods, portion control, support.",prescriptions:"Orlistat, Semaglutide — doctor.",severity:"moderate"},
+  {name:"Vitamin D Deficiency",symptoms:["fatigue","bone pain","muscle weakness","mood changes","hair loss"],remedies:"Sunlight 15-20 min daily, fatty fish, eggs, fortified foods.",prescriptions:"Vitamin D3 supplements — pharmacist.",severity:"minor"},
+  {name:"Vitamin B12 Deficiency",symptoms:["fatigue","weakness","pale skin","tingling","balance problems","memory issues"],remedies:"Animal products, fortified cereals, nutritional yeast.",prescriptions:"B12 injections/tablets — pharmacist.",severity:"moderate"},
+  {name:"Iron Deficiency Anemia",symptoms:["fatigue","weakness","pale skin","brittle nails","cold extremities","cravings"],remedies:"Red meat, spinach, lentils, vitamin C with iron, cooking in iron pots.",prescriptions:"Ferrous sulfate — pharmacist.",severity:"moderate"},
+  {name:"Dehydration",symptoms:["thirst","dry mouth","fatigue","dizziness","dark urine","headache"],remedies:"Drink water, ORS, coconut water, watery fruits.",prescriptions:"ORS sachets — pharmacist.",severity:"minor"},
+  {name:"Heat Stroke",symptoms:["high body temperature","altered mental state","nausea","rapid breathing","racing heart","headache"],remedies:"EMERGENCY — cool body immediately, hydrate, shade.",prescriptions:"Emergency hospital care.",severity:"major"},
+  {name:"Hypothermia",symptoms:["shivering","slurred speech","slow breathing","confusion","drowsiness","weak pulse"],remedies:"Warm gradually, dry clothes, warm drinks, avoid sudden heat.",prescriptions:"Emergency hospital care.",severity:"major"},
+  {name:"Tetanus",symptoms:["muscle stiffness","jaw locking","difficulty swallowing","spasms","fever","sweating"],remedies:"Wound cleaning, vaccination prevention.",prescriptions:"Tetanus immunoglobulin — emergency hospital.",severity:"major"},
+  {name:"Rabies",symptoms:["fever","headache","anxiety","hallucinations","fear of water","paralysis"],remedies:"EMERGENCY post-exposure prophylaxis immediately after bite.",prescriptions:"Rabies vaccine + immunoglobulin — emergency.",severity:"major"},
+  {name:"Mumps",symptoms:["swollen salivary glands","fever","headache","muscle aches","fatigue","loss of appetite"],remedies:"Rest, soft foods, cold compress, hydration, isolation.",prescriptions:"Symptomatic — doctor.",severity:"moderate"},
+  {name:"Whooping Cough",symptoms:["severe cough","whooping sound","vomiting after cough","exhaustion","runny nose","mild fever"],remedies:"Humidifier, hydration, small meals, rest.",prescriptions:"Azithromycin — doctor.",severity:"moderate"},
+  {name:"Scarlet Fever",symptoms:["red rash","sore throat","high fever","strawberry tongue","flushed face","chills"],remedies:"Hydration, soft foods, salt water gargle, rest.",prescriptions:"Penicillin, Amoxicillin — doctor.",severity:"moderate"},
+  {name:"Shingles",symptoms:["painful rash","blisters","tingling","fever","headache","fatigue"],remedies:"Cool compress, oatmeal bath, calamine, rest.",prescriptions:"Acyclovir, pain meds — doctor.",severity:"moderate"},
+  {name:"HIV/AIDS",symptoms:["recurrent fever","weight loss","chronic diarrhea","night sweats","fatigue","swollen glands"],remedies:"Healthy diet, exercise, stress management, support groups.",prescriptions:"Antiretroviral therapy (ART) — strict doctor.",severity:"major"},
+  {name:"Leukemia",symptoms:["fatigue","frequent infections","easy bruising","weight loss","bone pain","fever"],remedies:"Nutritious diet, infection prevention, emotional support.",prescriptions:"Chemotherapy — oncologist.",severity:"major"},
+  {name:"Lymphoma",symptoms:["swollen lymph nodes","fatigue","fever","night sweats","weight loss","itching"],remedies:"Healthy diet, rest, stress management, support.",prescriptions:"Chemo, radiation — oncologist.",severity:"major"},
+  {name:"Colon Cancer",symptoms:["change in bowel habits","blood in stool","abdominal discomfort","weight loss","fatigue","weakness"],remedies:"High-fiber diet, screening colonoscopy, exercise, limit red meat.",prescriptions:"Surgery, chemo — oncologist.",severity:"major"},
+  {name:"Stomach Cancer",symptoms:["upper abdominal pain","weight loss","feeling full quickly","nausea","vomiting","heartburn"],remedies:"Avoid processed meats, eat fruits/vegetables, no smoking.",prescriptions:"Surgery, chemo — oncologist.",severity:"major"},
+  {name:"Pancreatic Cancer",symptoms:["upper abdominal pain","jaundice","weight loss","loss of appetite","new diabetes","fatigue"],remedies:"Healthy diet, no smoking, manage diabetes, screening.",prescriptions:"Surgery, chemo — oncologist.",severity:"major"},
+  {name:"Cervical Cancer",symptoms:["abnormal bleeding","pelvic pain","painful intercourse","unusual discharge","heavy periods"],remedies:"HPV vaccine, regular Pap smears, safe sex, no smoking.",prescriptions:"Surgery, chemo — oncologist.",severity:"major"},
+  {name:"Ovarian Cancer",symptoms:["bloating","pelvic pain","feeling full quickly","frequent urination","fatigue","back pain"],remedies:"Healthy weight, regular check-ups, oral contraceptive history.",prescriptions:"Surgery, chemo — oncologist.",severity:"major"},
+  {name:"Bladder Cancer",symptoms:["blood in urine","frequent urination","painful urination","back pain","pelvic pain"],remedies:"Hydration, no smoking, limit chemical exposure.",prescriptions:"Surgery, chemo — urologist.",severity:"major"},
+  {name:"Thyroid Cancer",symptoms:["neck lump","hoarseness","difficulty swallowing","neck pain","swollen lymph nodes"],remedies:"Iodine balance, regular check-ups, avoid radiation exposure.",prescriptions:"Surgery, radioactive iodine — endocrinologist.",severity:"major"},
+  {name:"Bone Cancer",symptoms:["bone pain","swelling","fatigue","weight loss","easy fractures","limited movement"],remedies:"Calcium, vitamin D, exercise, support care.",prescriptions:"Surgery, chemo — oncologist.",severity:"major"}
 ];
-
-// Simple storage using localStorage (works offline too)
-function db() {
-  return {
-    getUsers: () => JSON.parse(localStorage.getItem('aida_users') || '[]'),
-    setUsers: (users) => localStorage.setItem('aida_users', JSON.stringify(users)),
-    getUser: (email) => db().getUsers().find(u => u.email === email.toLowerCase()),
-    createUser: (name, email, password) => {
-      const users = db().getUsers();
-      const newUser = { id: 'usr_' + Date.now(), name, email: email.toLowerCase(), password, created_at: new Date().toISOString(), msg_count: 0 };
-      users.push(newUser);
-      db().setUsers(users);
-      return newUser;
-    },
-    getChats: () => JSON.parse(localStorage.getItem('aida_chats') || '[]'),
-    setChats: (chats) => localStorage.setItem('aida_chats', JSON.stringify(chats)),
-    saveChat: (userId, message, response, diagnosis) => {
-      const chats = db().getChats();
-      chats.push({ user_id: userId, message, response, diagnosis, created_at: new Date().toISOString() });
-      db().setChats(chats);
-    },
-    getStats: () => {
-      const s = JSON.parse(localStorage.getItem('aida_stats') || '{"visits":0,"msgs":0}');
-      return s;
-    },
-    incVisits: () => {
-      const s = db().getStats();
-      s.visits = (s.visits || 0) + 1;
-      localStorage.setItem('aida_stats', JSON.stringify(s));
-    },
-    incMsgs: () => {
-      const s = db().getStats();
-      s.msgs = (s.msgs || 0) + 1;
-      localStorage.setItem('aida_stats', JSON.stringify(s));
+/* ============ MONGODB-SIMULATED STORAGE ============ */
+// Simulates MongoDB collections using localStorage
+const MongoDB = {
+  _getCollection(name) {
+    try { return JSON.parse(localStorage.getItem('aida_' + name)) || []; }
+    catch { return []; }
+  },
+  _saveCollection(name, data) {
+    localStorage.setItem('aida_' + name, JSON.stringify(data));
+  },
+  // Users collection
+  findUser(email) {
+    return this._getCollection('users').find(u => u.email === email.toLowerCase().trim());
+  },
+  insertUser(doc) {
+    const users = this._getCollection('users');
+    doc.email = doc.email.toLowerCase().trim();
+    doc._id = 'usr_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+    doc.createdAt = new Date().toISOString();
+    doc.lastLogin = new Date().toISOString();
+    doc.msgCount = 0;
+    doc.status = 'Active';
+    users.push(doc);
+    this._saveCollection('users', users);
+    return doc;
+  },
+  updateUserLogin(email) {
+    const users = this._getCollection('users');
+    const u = users.find(u => u.email === email.toLowerCase().trim());
+    if (u) { u.lastLogin = new Date().toISOString(); u.loginCount = (u.loginCount||0)+1; }
+    this._saveCollection('users', users);
+  },
+  incrementMsgCount(email) {
+    const users = this._getCollection('users');
+    const u = users.find(u => u.email === email.toLowerCase().trim());
+    if (u) { u.msgCount = (u.msgCount||0)+1; }
+    this._saveCollection('users', users);
+  },
+  getAllUsers() { return this._getCollection('users'); },
+  deleteUser(id) {
+    let users = this._getCollection('users');
+    users = users.filter(u => u._id !== id);
+    this._saveCollection('users', users);
+  },
+  // Stats collection
+  getStats() {
+    const s = this._getCollection('stats');
+    return s[0] || { totalMsgs:0 };
+  },
+  incrementMsgs() {
+    let s = this._getCollection('stats');
+    if (!s[0]) s = [{ totalMsgs:0 }];
+    s[0].totalMsgs = (s[0].totalMsgs||0) + 1;
+    this._saveCollection('stats', s);
+  },
+  // Admin credentials (hashed)
+  getAdminCreds() {
+    // Default admin: admin / aida123
+    const stored = localStorage.getItem('aida_admin_creds');
+    if (stored) return JSON.parse(stored);
+    return { username: 'admin', passHash: this._hash('aida123') };
+  },
+  setAdminCreds(username, password) {
+    localStorage.setItem('aida_admin_creds', JSON.stringify({
+      username, passHash: this._hash(password)
+    }));
+  },
+  verifyAdmin(username, password) {
+    const creds = this.getAdminCreds();
+    return creds.username === username && creds.passHash === this._hash(password);
+  },
+  _hash(str) {
+    // Simple hash for demo (production would use bcrypt/pbkdf2)
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + c;
+      hash |= 0;
     }
-  };
-}
-
-// Try Supabase, fall back to localStorage
-let useLocal = false;
-
-async function getUser(email) {
-  if (useLocal) return db().getUser(email);
-  try {
-    const users = await supabaseCall('users?email=eq.' + encodeURIComponent(email));
-    return users[0] || null;
-  } catch { useLocal = true; return db().getUser(email); }
-}
-
-async function createUser(name, email, password) {
-  if (useLocal) return db().createUser(name, email, password);
-  try {
-    const existing = await getUser(email);
-    if (existing) return null;
-    return await supabaseCall('users', { method: 'POST', body: { name, email, password } });
-  } catch { useLocal = true; return db().createUser(name, email, password); }
-}
-
-async function getAllUsers() {
-  if (useLocal) return db().getUsers();
-  try { return await supabaseCall('users?order=created_at.desc'); } catch { return db().getUsers(); }
-}
-
-async function getStats() {
-  if (useLocal) return db().getStats();
-  try { const stats = await supabaseCall('stats?id=eq.1'); return stats[0] || { visits: 0, total_messages: 0 }; } catch { return db().getStats(); }
-}
-
-async function updateStats(incVisits, incMsgs) {
-  if (useLocal) { if (incVisits) db().incVisits(); if (incMsgs) db().incMsgs(); return; }
-  try {
-    const current = await getStats();
-    const updates = {};
-    if (incVisits) updates.visits = (current.visits || 0) + 1;
-    if (incMsgs) updates.total_messages = (current.total_messages || 0) + 1;
-    if (Object.keys(updates).length > 0) {
-      await supabaseCall('stats', { method: 'PATCH', body: updates });
-    }
-  } catch { if (incVisits) db().incVisits(); if (incMsgs) db().incMsgs(); }
-}
-
-async function saveChat(userId, message, response, diagnosis) {
-  if (useLocal) { db().saveChat(userId, message, response, diagnosis); return; }
-  try { await supabaseCall('chats', { method: 'POST', body: { user_id: userId, message, response, diagnosis } }); } catch { db().saveChat(userId, message, response, diagnosis); }
-}
-
-async function getChats(userId) {
-  return await supabaseCall('chats?user_id=eq.' + userId + '&order=created_at.desc');
-}
-
-// Init
-(async function init() {
-  try {
-    const saved = sessionStorage.getItem('aida_user');
-    if (saved) state.user = JSON.parse(saved);
-    await updateStats(true, false);
-  } catch(e) { console.log(e); }
-  updateUI();
-  renderDiseases();
+    return 'h$' + Math.abs(hash).toString(36) + '$' + str.length;
+  }
+};
+/* ============ STATE ============ */
+const state = {
+  user: null,         // Current logged-in user
+  adminAuth: false,   // Whether admin is authenticated
+  history: [],
+  currentSession: [],
+  pendingDx: null,
+  libPage: 1,
+  libPerPage: 15,
+};
+// Restore session from sessionStorage
+(function restoreSession(){
+  const saved = sessionStorage.getItem('aida_session');
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      if (s.user) state.user = s.user;
+      if (s.adminAuth) state.adminAuth = s.adminAuth;
+    } catch {}
+  }
 })();
-
-function saveUser() { sessionStorage.setItem('aida_user', JSON.stringify(state.user)); }
-function showView(name) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-' + name).classList.add('active'); if(name === 'chat' && !state.user) showView('login'); if(name === 'admin') loadAdmin(); }
-function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-function showErr(id, msg) { const e = document.getElementById(id); e.textContent = msg; e.classList.add('show'); setTimeout(() => e.classList.remove('show'), 3000); }
-
-function requireAuth() { if (!state.user) { showView('login'); toast('Please login first'); } else showView('chat'); }
-
-async function doLogin(e) {
-  e.preventDefault();
-  const email = document.getElementById('email').value.trim().toLowerCase();
-  const password = document.getElementById('password').value;
-  if (!email || !password) { showErr('login-error', 'Fill all fields'); return; }
-  const user = await getUser(email);
-  if (user && user.password === password) {
-    state.user = { name: user.name, email: user.email, id: user.id };
-    saveUser();
-    updateUI();
-    showView('chat');
-    toast('Welcome back, ' + user.name + '!');
+function saveSession() {
+  sessionStorage.setItem('aida_session', JSON.stringify({
+    user: state.user,
+    adminAuth: state.adminAuth
+  }));
+}
+/* ============ TOAST ============ */
+function showToast(msg, duration=2500){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), duration);
+}
+window.showToast = showToast;
+/* ============ MODAL ============ */
+function openModal(html){
+  const overlay = document.getElementById('modal-overlay');
+  document.getElementById('modal-box').innerHTML = html;
+  overlay.classList.add('show');
+}
+function closeModal(e){
+  if(e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.closeModalForce = ()=> document.getElementById('modal-overlay').classList.remove('show');
+/* ============ PASSWORD TOGGLE ============ */
+function togglePass(id, btn) {
+  const inp = document.getElementById(id);
+  const icon = btn.querySelector('i');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'bi bi-eye-slash';
   } else {
-    showErr('login-error', 'Invalid email or password');
+    inp.type = 'password';
+    icon.className = 'bi bi-eye';
   }
 }
-
-async function doRegister(e) {
+window.togglePass = togglePass;
+/* ============ VIEW ROUTING ============ */
+function showView(name){
+  // Security gates
+  if (name === 'chat' && !state.user) {
+    showView('login');
+    showToast('🔒 Please login or register to chat with Aida');
+    return;
+  }
+  if (name === 'admin' && !state.adminAuth) {
+    showView('admin-login');
+    return;
+  }
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById('view-'+name);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+  if(name==='admin') initAdmin();
+  if(name==='chat' && state.currentSession.length===0) greet();
+}
+window.showView = showView;
+function requireAuthForChat(){
+  if (!state.user) {
+    showView('login');
+    showToast('🔒 Please login or register to use Aida chatbot');
+  } else {
+    showView('chat');
+  }
+}
+window.requireAuthForChat = requireAuthForChat;
+function requireAdminLogin(){
+  if (state.adminAuth) {
+    showView('admin');
+  } else {
+    showView('admin-login');
+  }
+}
+window.requireAdminLogin = requireAdminLogin;
+function updateUserUI(){
+  if(!state.user) return;
+  document.getElementById('user-name').textContent = state.user.name;
+  document.getElementById('user-email').textContent = state.user.email;
+  document.getElementById('user-avatar').textContent = state.user.name[0].toUpperCase();
+  let navHtml = `
+    <button class="btn-ghost d-none d-md-inline-flex" onclick="showView('landing')"><i class="bi bi-house-door"></i> Home</button>
+    <button class="btn-ghost" onclick="showView('chat')"><i class="bi bi-chat-dots"></i> Chat</button>
+  `;
+  // Only show admin button if user is also admin-authenticated
+  if (state.adminAuth) {
+    navHtml += `<button class="btn-ghost" onclick="showView('admin')"><i class="bi bi-speedometer2"></i> Admin</button>`;
+  }
+  navHtml += `<button class="btn-grad" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Sign out</button>`;
+  document.getElementById('nav-actions').innerHTML = navHtml;
+}
+/* ============ USER AUTH (MongoDB-backed) ============ */
+function showAuthError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+function doLogin(e){
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!email || !pass) {
+    showAuthError('login-error', '❌ Please fill in all fields.');
+    return;
+  }
+  // Check if user exists in MongoDB
+  const user = MongoDB.findUser(email);
+  if (!user) {
+    showAuthError('login-error', '❌ No account found with this email. Please register first.');
+    return;
+  }
+  // Verify password
+  if (user.passHash !== MongoDB._hash(pass)) {
+    showAuthError('login-error', '❌ Incorrect password. Please try again.');
+    return;
+  }
+  // Success
+  MongoDB.updateUserLogin(email);
+  state.user = { name: user.name, email: user.email, _id: user._id };
+  saveSession();
+  updateUserUI();
+  showToast('✅ Welcome back, ' + user.name + '!');
+  showView('chat');
+}
+function doRegister(e){
   e.preventDefault();
   const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const email = document.getElementById('reg-email').value.trim();
   const pass = document.getElementById('reg-pass').value;
   const pass2 = document.getElementById('reg-pass2').value;
-  if (!name || !email || !pass) { showErr('reg-error', 'Fill all fields'); return; }
-  if (pass.length < 6) { showErr('reg-error', 'Password min 6 chars'); return; }
-  if (pass !== pass2) { showErr('reg-error', 'Passwords not match'); return; }
-  const existing = await getUser(email);
-  if (existing) { showErr('reg-error', 'Email exists'); return; }
-  const user = await createUser(name, email, pass);
-  if (user && user.id) {
-    state.user = { name, email, id: user.id };
-    saveUser();
-    updateUI();
-    showView('chat');
-    toast('Account created!');
-  } else {
-    showErr('reg-error', 'Error creating account');
+  if (!name || !email || !pass || !pass2) {
+    showAuthError('reg-error', '❌ Please fill in all fields.');
+    return;
   }
-}
-
-function logout() { state.user = null; sessionStorage.removeItem('aida_user'); updateUI(); showView('landing'); toast('Logged out'); }
-
-function updateUI() {
-  if (state.user) {
-    document.getElementById('user-name').textContent = state.user.name;
-    document.getElementById('user-email').textContent = state.user.email;
-    document.getElementById('user-avatar').textContent = state.user.name[0].toUpperCase();
+  if (pass.length < 6) {
+    showAuthError('reg-error', '❌ Password must be at least 6 characters.');
+    return;
   }
-}
-
-function newChat() { document.getElementById('messages').innerHTML = ''; greet(); }
-function greet() { addMsg('bot', "Hello! I'm Aida, your AI health assistant. Describe your symptoms and I'll help identify possible conditions. What are you experiencing?"); }
-
-function addMsg(who, text, dx = null) {
-  const m = document.getElementById('messages');
-  let html = '<div class="msg ' + who + '"><div class="av">' + (who === 'bot' ? 'A' : state.user.name[0]) + '</div><div class="bubble">' + text + '</div></div>';
-  if (dx) {
-    html += '<div class="msg bot"><div class="av">A</div><div class="bubble"><div class="diagnosis-card"><div class="dx-head"><span class="dx-name">' + dx.name + '</span><span class="conf">' + dx.confidence + '%</span></div><div class="dx-section"><b>Symptoms</b>' + dx.matched.join(', ') + '</div><div class="dx-section"><b>Remedies</b>' + dx.remedies + '</div><div class="dx-section"><b>Prescriptions</b>' + dx.prescriptions + '</div><div class="disclaimer">Consult a doctor for proper diagnosis.</div></div></div></div>';
+  if (pass !== pass2) {
+    showAuthError('reg-error', '❌ Passwords do not match.');
+    return;
   }
-  m.innerHTML += html; m.scrollTop = m.scrollHeight;
+  // Check if already exists
+  if (MongoDB.findUser(email)) {
+    showAuthError('reg-error', '❌ An account with this email already exists. Please login.');
+    return;
+  }
+  // Create user
+  const doc = MongoDB.insertUser({
+    name,
+    email,
+    passHash: MongoDB._hash(pass)
+  });
+  state.user = { name: doc.name, email: doc.email, _id: doc._id };
+  saveSession();
+  updateUserUI();
+  showToast('🎉 Account created! Welcome, ' + name + '!');
+  showView('chat');
 }
-
-async function sendMessage() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-  if (!text) return;
-  addMsg('user', text);
-  input.value = '';
-  
-  await updateStats(false, true);
-  
-  const typing = document.getElementById('messages').innerHTML += '<div class="msg bot" id="typing"><div class="av">A</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>';
-  document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-  
-  setTimeout(async () => {
-    document.getElementById('typing')?.remove();
-    const lower = text.toLowerCase();
-    const matched = DISEASES.filter(d => d.symptoms.some(s => lower.includes(s)));
-    if (matched.length === 0) {
-      addMsg('bot', "I'm not sure I understood that. Describe your symptoms like 'I have headache and fever'");
-    } else {
-      const top = matched[0];
-      const matchedSymptoms = top.symptoms.filter(s => lower.includes(s));
-      const confidence = Math.min(95, 60 + matchedSymptoms.length * 12);
-      const dx = { name: top.name, matched: matchedSymptoms, confidence, remedies: top.remedies, prescriptions: top.prescriptions };
-      addMsg('bot', "Based on your symptoms, this could be " + top.name + ". How long have you had this?", dx);
-      if (state.user && state.user.id) await saveChat(state.user.id, text, JSON.stringify(dx), top.name);
-    }
-  }, 800);
+function logout(){
+  state.user = null;
+  state.currentSession = [];
+  state.history = [];
+  state.pendingDx = null;
+  saveSession();
+  document.getElementById('messages').innerHTML='';
+  document.getElementById('history-list').innerHTML='';
+  document.getElementById('nav-actions').innerHTML = `
+    <button class="btn-ghost d-none d-md-inline-flex" onclick="showView('landing')"><i class="bi bi-house-door"></i> Home</button>
+    <button class="btn-ghost" onclick="showView('login')">Login</button>
+    <button class="btn-grad" onclick="showView('register')">Get Started</button>
+  `;
+  showView('landing');
+  showToast('👋 Signed out successfully');
 }
-
-document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-
+window.doLogin=doLogin; window.doRegister=doRegister; window.logout=logout;
+/* ============ ADMIN AUTH ============ */
 function doAdminLogin(e) {
   e.preventDefault();
-  const u = document.getElementById('admin-user').value;
-  const p = document.getElementById('admin-pass').value;
-  if (u === 'admin' && p === 'aida123') {
-    state.adminAuth = true;
-    showView('admin');
-    toast('Admin logged in');
-  } else {
-    showErr('admin-error', 'Invalid credentials');
+  const user = document.getElementById('admin-login-user').value.trim();
+  const pass = document.getElementById('admin-login-pass').value;
+  if (!user || !pass) {
+    showAuthError('admin-login-error', '❌ Please enter both username and password.');
+    return;
+  }
+  if (!MongoDB.verifyAdmin(user, pass)) {
+    showAuthError('admin-login-error', '❌ Invalid admin credentials. Access denied.');
+    // Rate limit simulation
+    const btn = document.querySelector('#view-admin-login button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Wait 3s...';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-shield-lock"></i> Authenticate';
+    }, 3000);
+    return;
+  }
+  // Admin authenticated
+  state.adminAuth = true;
+  saveSession();
+  updateUserUI();
+  showToast('🔓 Admin access granted');
+  showView('admin');
+}
+window.doAdminLogin = doAdminLogin;
+function adminLogout() {
+  state.adminAuth = false;
+  saveSession();
+  updateUserUI();
+  showToast('🔒 Admin session ended');
+  showView('landing');
+}
+window.adminLogout = adminLogout;
+/* ============ CHATBOT ENGINE ============ */
+function tokenize(text){
+  return text.toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>2);
+}
+function scoreDiseases(userText, mentionedSymptoms){
+  const tokens = tokenize(userText);
+  const allTokens = new Set([...tokens, ...mentionedSymptoms]);
+  const scores = DISEASES.map(d=>{
+    let matched = [];
+    for(const sym of d.symptoms){
+      const symWords = sym.toLowerCase().split(' ');
+      let ok = false;
+      for(const t of allTokens){
+        for(const sw of symWords){
+          if(sw===t || (sw.length>4 && t.length>4 && (sw.includes(t)||t.includes(sw)))){
+            ok=true; break;
+          }
+        }
+        if(ok) break;
+      }
+      if(ok) matched.push(sym);
+    }
+    return {disease:d, matched, score: matched.length / d.symptoms.length};
+  });
+  scores.sort((a,b)=> b.score-a.score || b.matched.length-a.matched.length);
+  return scores;
+}
+const GREETINGS = ["hi","hello","hey","yo","greetings","hola","good morning","good evening"];
+function isGreeting(t){return GREETINGS.some(g=>t.toLowerCase().trim().startsWith(g));}
+
+function greet(){
+  const userName = state.user ? state.user.name : 'there';
+  addBot("<b>Hello, I'm Dr. Aida</b> — your AI health assistant. I'll ask you a few questions to help assess your condition.<br><br>Please describe your symptoms in detail. For example: <i>'I have a headache and fever since yesterday'</i> or <i>'Stomach pain and nausea for 3 days'</i>.<div class='quick-chips'><span class='chip' onclick=\"useChip('I have a sore throat and runny nose')\">Sore throat & runny nose</span><span class='chip' onclick=\"useChip('Severe headache and nausea')\">Headache & nausea</span><span class='chip' onclick=\"useChip('Stomach pain and bloating')\">Stomach pain</span></div><div class='disclaimer'>⚠️ I'm an educational prototype — always consult a licensed physician for medical advice.</div>");
+  addBot("Good " + getTimeOfDay() + ", " + userName + ". I'm Dr. Aida, an internal medicine physician. How can I help you today?<br><br>Please tell me — what symptoms are you experiencing, and how long have you had them?<div class='quick-chips'><span class='chip' onclick=\"useChip('I have a fever and sore throat')\">Fever & sore throat</span><span class='chip' onclick=\"useChip('I have a headache and body ache')\">Headache & body ache</span><span class='chip' onclick=\"useChip('I have stomach pain and nausea')\">Stomach pain & nausea</span></div><div class='disclaimer'>⚠️ I'm an AI health assistant — always consult a licensed physician for medical advice.</div>");
+}
+
+function getTimeOfDay(){
+  const h = new Date().getHours();
+  if(h<12) return "morning";
+  if(h<17) return "afternoon";
+  return "evening";
+}
+
+window.useChip = (txt)=>{document.getElementById('chat-input').value=txt; sendMessage(new Event('submit'));};
+
+function sendMessage(e){
+  if(e) e.preventDefault();
+  if (!state.user) {
+    showToast('🔒 Please login first to chat');
+    showView('login');
+    return;
+  }
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  addUser(txt);
+  inp.value='';
+  // Track message in MongoDB
+  MongoDB.incrementMsgCount(state.user.email);
+  MongoDB.incrementMsgs();
+  setTimeout(()=>processBot(txt), 600);
+  setTimeout(()=>processBot(txt), 700);
+}
+window.sendMessage = sendMessage;
+
+function processBot(txt){
+  if(isGreeting(txt) && state.currentSession.length<=2){
+    addBot("Hello! I'm Dr. Aida. To help assess your condition, please describe your symptoms in detail — what are you experiencing and for how long?");
+  if(isGreeting(txt) && state.currentSession.length<=3){
+    addBot("Hello! I'm Dr. Aida, an internal medicine physician. How can I help you today?<br><br>Please tell me — what symptoms are you experiencing, and how long have you had them?");
+    return;
+  }
+
+  if(!state.pendingDx){
+    state.pendingDx = {mentioned:[], asked:0, lastQuestion:null, duration:null};
+    state.pendingDx = {
+      mentioned:[], 
+      asked:0, 
+      lastQuestion:null, 
+      duration:null,
+      severity:null,
+      phase:'initial',
+      primaryComplaint:null,
+      questionsAsked:[],
+      allSymptoms:[]
+    };
+  }
+
+  const normalized = txt.toLowerCase();
+
+  if(state.pendingDx.lastQuestion){
+    handleAnswer(txt, normalized);
+    return;
+  }
+
+  if(state.pendingDx.phase === 'initial'){
+    handleInitialPhase(txt, normalized);
+    return;
+  }
+  state.pendingDx.mentioned.push(...tokenize(txt));
+
+  if(state.pendingDx.lastQuestion && state.pendingDx.lastQuestion.type === 'duration'){
+    const days = txt.match(/\d+/);
+    if(days){
+      state.pendingDx.duration = parseInt(days[0]);
+  if(state.pendingDx.phase === 'followup'){
+    handleFollowupPhase(txt, normalized);
+    return;
   }
 }
 
-function adminLogout() { state.adminAuth = false; showView('landing'); toast('Admin logged out'); }
+function handleInitialPhase(txt, normalized){
+  const tokens = tokenize(txt);
+  state.pendingDx.mentioned.push(...tokens);
 
-function adminTab(tab, el) {
-  document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
-  document.getElementById('tab-' + tab).style.display = 'block';
-  document.querySelectorAll('.admin-side nav a').forEach(a => { a.style.color = '#94a3b8'; a.classList.remove('bg-primary'); });
-  el.style.color = '#fff';
+  const durationMatch = txt.match(/(\d+)\s*(day|week|month|year)s?\s*(old|later|ago|since)?/i) || txt.match(/(since|yesterday|last)\s*(\d+\s*(day|week|month))?/i) || txt.match(/(\d+)\s*-\s*\d+\s*days?/);
+  if(durationMatch){
+    const numMatch = txt.match(/\d+/);
+    if(numMatch){
+      state.pendingDx.duration = parseInt(numMatch[0]);
+      if(/week/i.test(txt)) state.pendingDx.duration *= 7;
+      if(/month/i.test(txt)) state.pendingDx.duration *= 30;
+      if(/year/i.test(txt)) state.pendingDx.duration *= 365;
+    }
+    state.pendingDx.lastQuestion = null;
+  }
+    const yes = /\b(yes|yeah|yep|y|sometimes|often|a bit|kinda)\b/i.test(txt);
+    if(yes){
+      state.pendingDx.mentioned.push(...state.pendingDx.lastQuestion.symptom.split(' '));
+
+  const durationPatterns = [
+    /just\s*now/i,/an?\s*hour/i,/few\s*hours/i,
+    /today/i,/yesterday/i,/last\s*(two|three|four|few)\s*days/i,
+    /(\d+)\s*days?/i,/a\s*week/i,/(\d+)\s*weeks?/i,
+    /more\s*than\s*a?\s*week/i,/long\s*time/i,/chronic/i,/years?/i
+  ];
+  for(const p of durationPatterns){
+    if(p.test(txt)){
+      const dMatch = txt.match(/(\d+)\s*(day|week|month|year)/i);
+      if(dMatch){
+        let d = parseInt(dMatch[1]);
+        if(/week/i.test(dMatch[2])) d *= 7;
+        if(/month/i.test(dMatch[2])) d *= 30;
+        if(/year/i.test(dMatch[2])) d *= 365;
+        state.pendingDx.duration = d;
+      }
+      break;
+    }
+    state.pendingDx.lastQuestion = null;
+  }
+
+  state.pendingDx.primaryComplaint = txt;
+
+  const redFlag = detectRedFlag(normalized);
+  if(redFlag){
+    state.pendingDx.phase = 'redflag';
+    addBot(redFlag);
+    return;
+  }
+
+  const ranked = scoreDiseases(txt, state.pendingDx.mentioned);
+  const top = ranked[0];
+
+  if(top.score < 0.15){
+    addBot("I need more information to provide an assessment. Please describe your symptoms more specifically — for example: where does it hurt, how long have you had symptoms, any fever or fatigue?");
+  if(top.score < 0.12){
+    addBot("I understand. Could you please describe your symptoms more specifically?<br><br>For example:<br>• Where exactly do you feel pain or discomfort?<br>• How long have you had this?<br>• Is there any fever, vomiting, or other symptoms along with it?<div class='quick-chips'><span class='chip' onclick=\"useChip('I have fever and headache since yesterday')\">Fever & headache since yesterday</span><span class='chip' onclick=\"useChip('I have stomach pain for 3 days')\">Stomach pain for 3 days</span><span class='chip' onclick=\"useChip('Cough and cold for a week')\">Cough and cold for a week</span></div>");
+    return;
+  }
+
+  const confidence = Math.min(0.98, top.score * 0.7 + (top.matched.length/6)*0.3);
+  state.pendingDx.phase = 'followup';
+  state.pendingDx.disease = top.disease;
+  state.pendingDx.matched = top.matched;
+
+  if((confidence >= 0.7 || state.pendingDx.asked >= 3) && !state.pendingDx.duration){
+    state.pendingDx.lastQuestion = {type:'duration', symptom:'duration'};
+    addBot("One more question before I give my assessment — <b>how many days have you had these symptoms?</b> <div class='quick-chips'><span class='chip' onclick=\"useChip('2 days')\">2 days</span><span class='chip' onclick=\"useChip('5 days')\">5 days</span><span class='chip' onclick=\"useChip('1 week')\">1 week</span><span class='chip' onclick=\"useChip('2 weeks')\">2 weeks</span></div>");
+    return;
+  state.pendingDx.asked = 0;
+  state.pendingDx.questionsToAsk = getNextQuestions(top, state.pendingDx.mentioned);
+  askNextQuestion();
 }
 
-async function loadAdmin() {
-  const stats = await getStats();
-  document.getElementById('stat-visits').textContent = stats.visits || 0;
-  document.getElementById('stat-msgs').textContent = stats.total_messages || 0;
-  const users = await getAllUsers();
-  document.getElementById('stat-users').textContent = users.length;
-  document.getElementById('users-table').innerHTML = users.map(u => '<tr><td>'+u.name+'</td><td>'+u.email+'</td><td>'+(u.created_at ? u.created_at.substring(0,10) : '-')+'</td><td>'+(u.msg_count || 0)+'</td></tr>').join('') || '<tr><td colspan="4">No users</td></tr>';
+function getNextQuestions(top, mentioned){
+  const disease = top.disease;
+  const questions = [];
+
+  const allSymptoms = disease.symptoms.map(s => s.toLowerCase());
+  const mentionedLower = mentioned.map(s => s.toLowerCase());
+
+  if(!mentionedLower.some(m => /fever|pyrexia|temperature|hot/i.test(m))){
+    questions.push({q:"Do you have fever? If yes, have you measured your temperature?", symptom:"fever", key:"fever"});
+  }
+  if(!mentionedLower.some(m => /nausea|vomit|sick/i.test(m))){
+    questions.push({q:"Any nausea or vomiting?", symptom:"nausea", key:"nausea"});
+  }
+  if(!mentionedLower.some(m => /fatigue|tired|exhausted|weakness/i.test(m))){
+    questions.push({q:"Do you feel tired or fatigued?", symptom:"fatigue", key:"fatigue"});
+  }
+  if(!mentionedLower.some(m => /pain|ache|hurt/i.test(m))){
+    questions.push({q:"How would you rate the pain or discomfort on a scale of 1 to 10?", symptom:"pain", key:"pain"});
+  }
+  if(!mentionedLower.some(m => /cough|breath|breathing|wheez/i.test(m))){
+    questions.push({q:"Any cough or difficulty breathing?", symptom:"cough", key:"cough"});
+  }
+  if(!mentionedLower.some(m => /diarrhea|loose|bowel|stool/i.test(m))){
+    questions.push({q:"Any diarrhea or changes in bowel movements?", symptom:"diarrhea", key:"diarrhea"});
+  }
+  if(!mentionedLower.some(m => /rash|skin|i?tch/i.test(m))){
+    questions.push({q:"Any rash or skin changes?", symptom:"rash", key:"rash"});
+  }
+  if(!mentionedLower.some(m => /appetite|eat|weight/i.test(m))){
+    questions.push({q:"Has your appetite been normal? Any weight loss?", symptom:"appetite", key:"appetite"});
+  }
+
+  return questions.slice(0, 5);
 }
 
-function renderDiseases() {
-  document.getElementById('lib-table').innerHTML = DISEASES.map((d, i) => '<tr><td>'+(i+1)+'</td><td>'+d.name+'</td><td>'+d.symptoms.slice(0,4).join(', ')+'</td><td><span style="background:'+(d.severity==='major'?'#fee2e2':d.severity==='moderate'?'#fef3c7':'#dcfce7')+';padding:.2rem .5rem;border-radius:4px;font-size:.75rem">'+d.severity+'</span></td></tr>').join('');
+  if(confidence >= 0.7 || state.pendingDx.asked >= 3){
+    finalDiagnosis(top, confidence);
+function askNextQuestion(){
+  const q = state.pendingDx.questionsToAsk[state.pendingDx.asked];
+  if(!q){
+    askDuration();
+    return;
+  }
+  state.pendingDx.lastQuestion = q;
+  const questionNum = state.pendingDx.asked + 1;
+  const total = state.pendingDx.questionsToAsk.length;
+  addBot("<b>Question " + questionNum + " of " + total + ":</b><br>" + q.q + "<div class='quick-chips'><span class='chip' onclick=\"useChip('Yes')\">Yes</span><span class='chip' onclick=\"useChip('No')\">No</span></div>");
 }
 
-function filterDiseases(q) {
-  const f = DISEASES.filter(d => d.name.toLowerCase().includes(q.toLowerCase()) || d.symptoms.some(s => s.includes(q.toLowerCase())));
-  document.getElementById('lib-table').innerHTML = f.length ? f.map((d, i) => '<tr><td>'+(i+1)+'</td><td>'+d.name+'</td><td>'+d.symptoms.slice(0,4).join(', ')+'</td><td><span style="background:'+(d.severity==='major'?'#fee2e2':d.severity==='moderate'?'#fef3c7':'#dcfce7')+';padding:.2rem .5rem;border-radius:4px;font-size:.75rem">'+d.severity+'</span></td></tr>').join('') : '<tr><td colspan="4">No results</td></tr>';
+  const unmentioned = top.disease.symptoms.filter(s=>!top.matched.includes(s));
+  if(unmentioned.length===0){
+    finalDiagnosis(top, confidence);
+function handleAnswer(txt, normalized){
+  const q = state.pendingDx.lastQuestion;
+  const yes = /\b(yes|yeah|yep|y|sometimes|often|a bit|kinda|have|having|i\s+do|i\s+have)/i.test(txt);
+  const no = /\b(no|nope|not|none|never|i\s+don'?t\s+have|don'?t\s+have|haven?t)/i.test(txt);
+
+  if(q.key === 'severity'){
+    const num = txt.match(/\d+/);
+    if(num) state.pendingDx.severity = parseInt(num[0]);
+  } else if(q.key === 'duration'){
+    const num = txt.match(/\d+/);
+    if(num){
+      state.pendingDx.duration = parseInt(num[0]);
+      if(/week/i.test(txt)) state.pendingDx.duration *= 7;
+      if(/month/i.test(txt)) state.pendingDx.duration *= 30;
+    }
+    if(/today/i.test(txt)) state.pendingDx.duration = 1;
+    if(/yesterday/i.test(txt)) state.pendingDx.duration = 1;
+    if(/don'?t\s+know/i.test(txt) || /not\s+sure/i.test(txt)) state.pendingDx.duration = 3;
+  } else if(q.key === 'followup_more'){
+    state.pendingDx.asked = 0;
+    state.pendingDx.phase = 'initial';
+    state.pendingDx.lastQuestion = null;
+    handleInitialPhase(txt, normalized);
+    return;
+  } else if(q.key === 'worried_about'){
+    if(yes){
+      if(state.pendingDx.seriousConcern){
+        const seriousQ = getSeriousConcernQuestion(state.pendingDx.seriousConcern);
+        if(seriousQ){
+          state.pendingDx.lastQuestion = {q: seriousQ.q, key: seriousQ.key};
+          addBot(seriousQ.q + "<div class='quick-chips'><span class='chip' onclick=\"useChip('Yes')\">Yes</span><span class='chip' onclick=\"useChip('No')\">No</span></div>");
+          return;
+        }
+      }
+    }
+    giveFinalAdvice();
+    return;
+  } else if(q.key === 'more_symptoms'){
+    if(!yes){
+      giveFinalAdvice();
+      return;
+    }
+    state.pendingDx.asked = 0;
+    state.pendingDx.phase = 'initial';
+    state.pendingDx.lastQuestion = null;
+    handleInitialPhase(txt, normalized);
+    return;
+  } else {
+    if(yes){
+      state.pendingDx.mentioned.push(q.symptom.toLowerCase());
+      state.pendingDx.matched = state.pendingDx.matched || [];
+      state.pendingDx.matched.push(q.symptom);
+    }
+  }
+  const askSym = unmentioned[0];
+  state.pendingDx.lastQuestion = {symptom: askSym};
+
+  state.pendingDx.lastQuestion = null;
+  state.pendingDx.asked++;
+  const phrasings = [
+    "Thank you. Are you also experiencing <b>" + askSym + "</b>? (yes/no)",
+    "One more question — do you have <b>" + askSym + "</b>?",
+    "To confirm, have you noticed <b>" + askSym + "</b> as well?",
+  ];
+  addBot(phrasings[state.pendingDx.asked % 3] + " <div class='quick-chips'><span class='chip' onclick=\"useChip('Yes')\">Yes</span><span class='chip' onclick=\"useChip('No')\">No</span></div>");
+
+  if(state.pendingDx.asked >= state.pendingDx.questionsToAsk.length){
+    askDuration();
+  } else {
+    askNextQuestion();
+  }
 }
 
-function toggleAddForm() {
-  document.getElementById('tab-library').style.display = 'none';
-  document.getElementById('tab-add-disease').style.display = 'block';
+function askDuration(){
+  state.pendingDx.phase = 'duration';
+  state.pendingDx.lastQuestion = {q:"How many days have you had these symptoms?", symptom:"duration", key:"duration"};
+  addBot("How many days have you had these symptoms?<br><br><div class='quick-chips'><span class='chip' onclick=\"useChip('Just today - started today')\">Just today</span><span class='chip' onclick=\"useChip('Since yesterday')\">Since yesterday</span><span class='chip' onclick=\"useChip('3 days')\">3 days</span><span class='chip' onclick=\"useChip('5 to 7 days')\">5-7 days</span><span class='chip' onclick=\"useChip('More than a week')\">More than a week</span></div>");
 }
 
-function showLib() {
-  document.getElementById('tab-add-disease').style.display = 'none';
-  document.getElementById('tab-library').style.display = 'block';
+function finalDiagnosis(top, conf){
+  const d = top.disease;
+function giveFinalAdvice(){
+  const d = state.pendingDx.disease;
+  const days = state.pendingDx.duration || 3;
+  const sevColor = d.severity==='major'?'pill-red':d.severity==='moderate'?'pill-blue':'pill-green';
+
+  let durationNote = '';
+  if(state.pendingDx && state.pendingDx.duration){
+    const days = state.pendingDx.duration;
+    if(days <= 2){
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms are recent (' + days + ' day(s)). This appears to be an early-stage presentation. Please monitor closely and consult a doctor if symptoms worsen.</div>';
+    } else if(days <= 7){
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have persisted for ' + days + ' day(s). If not improving, please seek medical attention.</div>';
+    } else if(days <= 14){
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have lasted ' + days + ' days. Prolonged symptoms warrant a professional check-up.</div>';
+    } else {
+      durationNote = '<div class="dx-section"><b>📅 Duration Assessment</b>Your symptoms have persisted for ' + days + ' days (2+ weeks). <span style="color:var(--danger);font-weight:600">Please consult a doctor immediately.</span></div>';
+  const matchedCount = (state.pendingDx.matched || []).length;
+  const totalSymptoms = d.symptoms.length;
+  const matchPct = Math.round((matchedCount / totalSymptoms) * 100);
+
+  let durationAdvice = getDurationAdvice(d.name, days);
+  let severityNote = '';
+  if(state.pendingDx.severity){
+    if(state.pendingDx.severity >= 7){
+      severityNote = '<div class="dx-section"><b>⚠️ Pain Severity</b>You rated your pain/discomfort at ' + state.pendingDx.severity + '/10, which is quite significant. Please ensure you take proper rest and if it worsens, see a doctor.</div>';
+    }
+  }
+
+  const html = "Based on your symptoms, my best assessment is:" +
+    "<div class=\"diagnosis-card\">" +
+      "<div class=\"dx-head\">" +
+
+  const html = 
+    "<b>Here's my assessment, based on what you've told me:</b><br><br>" +
+    "<div class='diagnosis-card'>" +
+      "<div class='dx-head'>" +
+        "<div>" +
+          "<div class=\"dx-name\">" + d.name + "</div>" +
+          "<div><span class=\"pill " + sevColor + "\">" + d.severity.toUpperCase() + "</span> · matched " + top.matched.length + "/" + d.symptoms.length + " symptoms</div>" +
+          "<div class='dx-name'>Most Likely: " + d.name + "</div>" +
+          "<div><span class='pill " + sevColor + "'>" + d.severity.toUpperCase() + "</span> · Matched " + matchedCount + "/" + totalSymptoms + " symptoms (" + matchPct + "% match)</div>" +
+        "</div>" +
+        "<span class=\"conf\">" + Math.round(conf*100) + "% confidence</span>" +
+      "</div>" +
+        "<div class=\"dx-section\"><b>Common Symptoms</b>" + d.symptoms.join(' • ') + "</div>" +
+        durationNote +
+        "<div class=\"dx-section\"><b>🍵 Home Remedies</b>" + d.remedies + "</div>" +
+      "<div class=\"dx-section\"><b>💊 Generic Prescriptions</b>" + d.prescriptions + "</div>" +
+      "<div class=\"disclaimer\">⚠️ This is an AI-assisted suggestion, not a medical diagnosis. Please consult a licensed pharmacist or doctor for body-specific confirmation before taking any medication.</div>" +
+      "<div class='dx-section'><b>Your Symptoms</b>" + state.pendingDx.primaryComplaint + "</div>" +
+      "<div class='dx-section'><b>📅 Duration</b>" + days + " day(s)</div>" +
+      durationAdvice +
+      severityNote +
+      "<div class='dx-section'><b>🍵 Home Care & Remedies</b>" + d.remedies + "</div>" +
+      "<div class='dx-section'><b>💊 Recommended Medicines</b>" + d.prescriptions + "</div>" +
+      "<div class='dx-section'><b>🔬 When to Get Tests Done</b>" + getTestAdvice(d.name, days) + "</div>" +
+      "<div class='dx-section'><b>🚨 Red Flags — See a Doctor Immediately If:</b>Sudden worsening of symptoms · High fever not responding to medicine · Difficulty breathing · Severe pain · Blood in vomit or stool · Confusion · Unable to eat or drink · Symptoms lasting beyond recommended duration</div>" +
+      "<div class='disclaimer'>⚠️ This is an AI-assisted assessment, not a substitute for professional medical diagnosis. Please consult a licensed physician for personalized medical advice.</div>" +
+    "</div>" +
+    "<div style=\"margin-top:.8rem;font-size:.9rem\">Would you like to start a <a href=\"#\" onclick=\"newChat();return false;\" style=\"color:var(--primary);font-weight:600\">new check-up</a>?</div>";
+    "<div style='margin-top:.8rem'>" +
+      "To summarize: You likely have <b>" + d.name + "</b>. " +
+      "Follow the treatment plan above for <b>" + getTreatmentDuration(d.name, days) + ".</b> " +
+      "If symptoms worsen or you develop any red flags, please see a doctor immediately.<br><br>" +
+      "Is there anything else you're experiencing or worried about?<br>" +
+      "<div class='quick-chips'><span class='chip' onclick=\"useChip('No, thats all for now')\">No, that's all</span><span class='chip' onclick=\"useChip('I have another concern')\">I have another concern</span></div>" +
+    "</div>";
+
+  addBot(html);
+  state.history.unshift({title: d.name, time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
+  renderHistory();
+  state.pendingDx = null;
+  state.pendingDx.lastQuestion = {q:"Is there anything else?", symptom:"", key:"worried_about"};
+  state.pendingDx.phase = 'done';
 }
 
-function addDisease() {
-  const name = document.getElementById('new-disease-name').value.trim();
-  const symptoms = document.getElementById('new-disease-symptoms').value.split(',').map(s => s.trim());
-  const remedies = document.getElementById('new-disease-remedies').value.trim();
-  const prescriptions = document.getElementById('new-disease-prescriptions').value.trim();
-  const severity = document.getElementById('new-disease-severity').value;
-  if (!name || !symptoms || !remedies || !prescriptions) { toast('Fill all fields'); return; }
-  DISEASES.push({ name, symptoms, remedies, prescriptions, severity });
-  document.getElementById('lib-count').textContent = DISEASES.length;
-  renderDiseases();
-  toast('Disease added!');
-  document.getElementById('new-disease-name').value = '';
-  document.getElementById('new-disease-symptoms').value = '';
-  document.getElementById('new-disease-remedies').value = '';
-  document.getElementById('new-disease-prescriptions').value = '';
+function getDurationAdvice(diseaseName, days){
+  const name = diseaseName.toLowerCase();
+
+  if(name.includes('cold') || name.includes('flu') || name.includes('influenza')){
+    if(days <= 2) return "<div class='dx-section'><b>📋 Day 1-2 Plan</b>Rest completely · Drink 2-3 liters of warm water/fluids daily · Tab. Paracetamol 500mg every 6 hours for fever/body ache · Steam inhalation 2x/day · Ginger-lemon-honey tea 3x/day · Light, nutritious food · Monitor temperature every 4 hours.</div>";
+    if(days <= 5) return "<div class='dx-section'><b>📋 Day 3-5 Plan</b>Continue rest and fluids · Tab. Paracetamol 650mg every 6 hours if fever persists · Tab. Cetirizine 10mg at night for congestion · Warm soups and ORS solution · If fever lasts beyond 5 days, please get CBC and malaria/dengue test done.</div>";
+    return "<div class='dx-section'><b>📋 Day 5+ Plan</b>Prolonged flu-like illness needs investigation. Please get: CBC, CRP, Dengue NS1/Malaria test, and chest X-ray if cough is present. Consult a physician — do not delay.</div>";
+  }
+
+  if(name.includes('dengue')){
+    return "<div class='dx-section'><b>📋 Dengue Management</b>Complete rest is mandatory · Tab. Paracetamol 500mg ONLY — never use Aspirin or Ibuprofen · Papaya leaf juice 2x/day · 3+ liters of water daily · Monitor platelet count every alternate day · Rest for 2 weeks minimum even after fever subsides · Warning signs: bleeding gums, skin rash, severe abdominal pain — go to ER immediately.</div>";
+  }
+
+  if(name.includes('malaria')){
+    return "<div class='dx-section'><b>📋 Malaria Management</b>URGENT: Please get blood smear and rapid antigen test immediately · While waiting for results, take Tab. Paracetamol 500mg for fever · Drink plenty of fluids · Do not take any medicine containing Aspirin · If test is positive, a doctor will prescribe Artemisinin-based combination therapy (ACT) — complete the full course even if you feel better.</div>";
+  }
+
+  if(name.includes('gastritis') || name.includes('acid') || name.includes('reflux')){
+    if(days <= 3) return "<div class='dx-section'><b>📋 Day 1-3 Plan</b>Eat small, frequent meals · Avoid spicy, oily, and acidic foods · No coffee/tea/alcohol · Drink cold milk for immediate relief · Tab. Pantoprazole 40mg empty stomach in the morning · Avoid lying down immediately after eating · Raise head of bed by 6 inches.</div>";
+    return "<div class='dx-section'><b>📋 Extended Acid Reflux</b>If symptoms persist beyond 1 week despite medication, please consult a gastroenterologist. You may need an endoscopy. Continue Pantoprazole 40mg daily before breakfast. Avoid trigger foods completely.</div>";
+  }
+
+  if(name.includes('migrane') || name.includes('headache')){
+    if(days <= 1) return "<div class='dx-section'><b>📋 Migraine/Headache Plan</b>Rest in a dark, quiet room · Cold compress on forehead · Tab. Ibuprofen 400mg at first sign of headache · Tab. Sumatriptan 50mg if prescribed by doctor · Avoid screens, loud noises, and strong smells · Identify and avoid triggers (cheese, chocolate, stress, sleep deprivation).</div>";
+    return "<div class='dx-section'><b>📋 Persistent Headache</b>If you have had headaches for more than 2 weeks or if they are getting worse, please get: CBC, MRI brain, and eye examination. Consult a neurologist. Track your headaches — when they occur, duration, triggers, and severity.</div>";
+  }
+
+  if(name.includes('diarrhea')){
+    if(days <= 2) return "<div class='dx-section'><b>📋 Day 1-2 Plan</b>ORS solution (1 packet in 1 liter water) — sip frequently · BRAT diet: Bananas, Rice, Applesauce, Toast · Avoid dairy, oily food, and raw vegetables · Tab. Loperamide 2mg after each loose stool (max 8mg/day) · Probiotic capsule 1x/day · Monitor for signs of dehydration.</div>";
+    return "<div class='dx-section'><b>📋 Prolonged Diarrhea</b>If diarrhea persists beyond 5 days, please get: Stool routine and culture, CBC, and electrolytes. If there is blood in stool, fever, or severe abdominal pain — see a doctor immediately. Do not take antibiotics without prescription.</div>";
+  }
+
+  if(name.includes('typhoid')){
+    return "<div class='dx-section'><b>📋 Typhoid Management</b>Complete rest is essential · Only eat thoroughly cooked, bland food · Drink only boiled/filtered water · Tab. Azithromycin 500mg 1x daily for 5 days OR as prescribed · Tab. Paracetamol for fever · Avoid NSAIDs (Ibuprofen) — they can cause gut bleeding · Get a follow-up typhoid test after 1 week to confirm clearance.</div>";
+  }
+
+  return "<div class='dx-section'><b>📋 General Care Plan for " + days + " Days</b>" + getGeneralCare(days) + "</div>";
 }
+
+function getGeneralCare(days){
+  if(days <= 2) return "Rest well · Drink plenty of fluids · Eat light, nutritious food · Take Tab. Paracetamol 500-650mg every 6 hours if you have fever or pain · Monitor your symptoms — if they worsen or new symptoms appear, please consult a doctor.";
+  if(days <= 5) return "Continue rest · Maintain good hydration · Take medicines as directed · If symptoms are not improving, please get basic tests (CBC) done · Watch for warning signs: high fever, severe pain, vomiting, or new symptoms.";
+  if(days <= 14) return "Your symptoms have lasted over a week. I recommend: CBC, CRP, and any organ-specific tests based on your symptoms. Please see a doctor in person for a thorough examination. Continue supportive care.";
+  return "Your symptoms have persisted for more than 2 weeks. Please see a physician immediately for a comprehensive evaluation, blood tests, and possibly imaging studies. Do not self-medicate.";
+}
+
+function getTestAdvice(diseaseName, days){
+  const name = diseaseName.toLowerCase();
+
+  if(name.includes('cold') || name.includes('flu') || name.includes('influenza')){
+    if(days >= 5) return "CBC (complete blood count) to check for infection · Rapid influenza test if available · If fever persists >5 days: Dengue NS1, Malaria smear, and COVID test";
+    return "Usually not needed for common cold within first 3-4 days. Get tested only if fever is high or symptoms worsen.";
+  }
+
+  if(name.includes('dengue')) return "CBC with platelet count (alternate days) · Dengue NS1 antigen (within 5 days of fever) · IgM/IgG antibodies (after day 5) · Liver function test · Monitor platelet count — if below 50,000, hospital admission needed.";
+
+  if(name.includes('malaria')) return "Peripheral blood smear for malaria parasite (gold standard) · Rapid malaria antigen test · CBC with thick and thin smear · If positive, get species identification before starting treatment.";
+
+  if(name.includes('typhoid')) return "Widal test (qualitative) · Typhoid IgM/IgG rapid test · Blood culture (gold standard) · Stool culture if carrier suspected · Liver function tests if on antibiotics.";
+
+  if(name.includes('gastritis') || name.includes('acid') || name.includes('reflux')){
+    if(days >= 14) return "Upper GI endoscopy (to rule out ulcers, H. pylori) · Urea breath test for H. pylori · Abdominal ultrasound if pain is severe";
+    return "Not usually needed within first 1-2 weeks. See a doctor if symptoms persist beyond 2 weeks or if you have blood in vomit or black stools.";
+  }
+
+  if(name.includes('diarrhea')) {
+    if(days >= 5) return "Stool routine and culture · CBC · Electrolytes (if dehydrated) · If blood in stool: colonoscopy or sigmoidoscopy";
+    return "Usually not needed if diarrhea is mild and improving. Get tested if diarrhea is profuse, bloody, or persists beyond 5 days.";
+  }
+
+  return "Basic tests recommended: CBC, CRP. Based on your specific symptoms, your doctor may recommend additional organ-specific tests.";
+}
+
+function getTreatmentDuration(diseaseName, days){
+  const name = diseaseName.toLowerCase();
+  if(name.includes('cold')) return "5-7 days for complete recovery";
+  if(name.includes('flu') || name.includes('influenza')) return "7-10 days for full recovery";
+  if(name.includes('dengue')) return "2-3 weeks for full recovery (rest is critical even after fever subsides)";
+  if(name.includes('malaria')) return "7-14 days depending on type, plus 2 weeks for full recovery";
+  if(name.includes('typhoid')) return "7-14 days of antibiotics, rest for 3 weeks total";
+  if(name.includes('gastritis')) return "2-4 weeks with medication and diet control";
+  if(name.includes('diarrhea')) return "2-5 days, or until stools normalize";
+  if(name.includes('migrane') || name.includes('headache')) return "as needed for acute episodes, or as prescribed for preventive";
+  return "7-14 days or as symptoms dictate";
+}
+
+function detectRedFlag(normalized){
+  const redFlags = [
+    {pattern: /chest\s*pain|chest\s*pressure|chest\s*tightness|heart\s*pain/i, msg:"<b>⚠️ EMERGENCY WARNING</b><br>This could be a heart-related emergency.<br><br>Please go to the <b>nearest emergency room immediately</b> if you are experiencing chest pain, pressure, or tightness — especially if it radiates to your arm, jaw, or back.<br><br>Do not wait. Call emergency services or have someone take you to the hospital right now.<br><br>Is there anyone with you who can take you to the hospital?"},
+    {pattern: /blood\s*in\s*stool|black\s*stool|bloody\s*stool/i, msg:"<b>⚠️ IMPORTANT</b><br>Blood in stool needs prompt medical evaluation. Please see a doctor today or tomorrow for an examination. If there is heavy bleeding or dizziness, go to the ER immediately.<br><br>In the meantime, avoid any blood-thinning medications like Aspirin."},
+    {pattern: /blood\s*in\s*vomit|vomiting\s*blood|hematemesis/i, msg:"<b>⚠️ EMERGENCY</b><br>Vomiting blood requires immediate medical attention.<br><br>Please go to the <b>nearest emergency room right now</b>.<br><br>Do not eat or drink anything until you have been examined by a doctor."},
+    {pattern: /sudden\s*severe\s*headache|worst\s*headache\s*of\s*my\s*life|thunderclap\s*headache/i, msg:"<b>⚠️ EMERGENCY</b><br>A sudden, severe headache — especially if it's the worst you've ever experienced — can indicate a brain hemorrhage or stroke.<br><br>Please go to the <b>nearest emergency room immediately</b>.<br><br>Do not ignore this."},
+    {pattern: /weakness\s*in\s*(arm|leg|face)|numbness\s*in\s*(arm|leg|face)|face\s*droop/i, msg:"<b>⚠️ EMERGENCY — POSSIBLE STROKE</b><br>Weakness or numbness on one side of the body, especially with facial droop or speech difficulty, is a <b>medical emergency</b>.<br><br>Please go to the <b>nearest emergency room immediately</b>. Remember: Time is brain.<br><br>Call emergency services now."},
+    {pattern: /difficulty\s*breathing|shortness\s*of\s*breath|can'?t\s*breathe|breathing\s*difficulty/i, msg:"<b>⚠️ EMERGENCY</b><br>Difficulty breathing needs immediate attention.<br><br>Please go to the <b>nearest emergency room right now</b> if you are struggling to breathe, have bluish lips/fingertips, or chest pain with breathing.<br><br>If it's mild, please see a doctor today."},
+    {pattern: /coughing\s*blood|hemoptysis/i, msg:"<b>⚠️ EMERGENCY</b><br>Coughing up blood requires immediate medical evaluation.<br><br>Please go to the <b>nearest emergency room now</b>."},
+    {pattern: /seizure|convulsion|fit/i, msg:"<b>⚠️ EMERGENCY</b><br>Seizures require immediate medical attention.<br><br>Please call emergency services and keep the person safe — remove nearby objects, lay them on their side, do not put anything in their mouth.<br><br>Go to the hospital immediately."},
+    {pattern: /high\s*fever.*not\s*responding|fever.*105|fever.*104/i, msg:"<b>⚠️ HIGH FEVER WARNING</b><br>High fever that isn't responding to medication, or fever above 103°F (39.4°C), needs medical attention.<br><br>Please see a doctor today. If you also have confusion, seizures, or difficulty breathing, go to the ER immediately.<br><br>Keep taking Tab. Paracetamol 650mg every 6 hours in the meantime."},
+    {pattern: /suicidal|want\s*to\s*die|kill\s*myself|end\s*my\s*life/i, msg:"<b>I'm very concerned about you.</b><br><br>If you're having thoughts of harming yourself, please reach out for support:<br><br>🛡️ <b>National Suicide Prevention Lifeline:</b> 988 (US)<br>🛡️ <b>Crisis Text Line:</b> Text HOME to 741741<br><br>Please tell someone you trust — a family member, friend, or healthcare provider — and seek help immediately. You are not alone."},
+    {pattern: /blood\s*cancer|leukemia|lymphoma/i, msg:"That's a serious concern. Let me ask you some important questions to properly assess this risk.<br><br>Have you noticed any of the following: unexplained weight loss, night sweats, easy bruising or bleeding, prolonged fever not responding to medication, swollen lymph nodes, bone pain, or extreme fatigue that doesn't improve with rest?"}
+  ];
+
+  for(const flag of redFlags){
+    if(flag.pattern.test(normalized)){
+      if(flag.pattern.source.includes('blood\\s*cancer|leukemia|lymphoma')){
+        state.pendingDx.seriousConcern = 'bloodcancer';
+      }
+      return flag.msg;
+    }
+  }
+  return null;
+}
+
+function getSeriousConcernQuestion(type){
+  const questions = [
+    {q:"Have you experienced <b>unexplained weight loss</b> (more than 5kg without diet or exercise)?", key:"weightloss"},
+    {q:"Have you had <b>night sweats</b> that soak your clothes or bedding?", key:"nightsweats"},
+    {q:"Do you notice <b>easy bruising</b> or bleeding from minor cuts?", key:"bruising"},
+    {q:"Have you had a <b>prolonged fever</b> that hasn't responded to antibiotics or fever medicine?", key:"prolongedfever"},
+    {q:"Have you noticed <b>swollen lymph nodes</b> (in neck, armpit, or groin) that are not going away?", key:"lymphnodes"},
+    {q:"Do you feel <b>extreme fatigue</b> that doesn't improve even after rest?", key:"fatigue"}
+  ];
+  return questions[Math.floor(Math.random() * questions.length)];
+}
+
+function handleFollowupPhase(txt, normalized){
+  state.pendingDx.phase = 'initial';
+  handleInitialPhase(txt, normalized);
+}
+
+function renderHistory(){
+
+function renderHistory(){
+  const list = document.getElementById('history-list');
+  list.innerHTML = state.history.slice(0,12).map(h=>"<div class=\"history-item\"><i class=\"bi bi-clipboard2-pulse\"></i><div><div>" + h.title + "</div><div style=\"font-size:.72rem;color:var(--muted)\">" + h.time + "</div></div></div>").join('') || '<div style="color:var(--muted);font-size:.85rem;padding:.5rem .8rem">No previous chats</div>';
+}
+function newChat(){
+  state.currentSession=[];
+  state.pendingDx=null;
+  document.getElementById('messages').innerHTML='';
+  greet();
+}
+window.newChat = newChat;
+function addUser(text){
+  state.currentSession.push({role:'user',text});
+  const m = document.getElementById('messages');
+  const initial = (state.user?.name?.[0]||'U').toUpperCase();
+  m.insertAdjacentHTML('beforeend', '<div class="msg user"><div class="av">' + initial + '</div><div class="bubble">' + escapeHtml(text) + '</div></div>');
+  m.scrollTop = m.scrollHeight;
+}
+function addBot(html){
+  state.currentSession.push({role:'bot',text:html});
+  const m = document.getElementById('messages');
+  const tid = 'typ'+Date.now();
+  m.insertAdjacentHTML('beforeend', '<div class="msg bot" id="' + tid + '"><div class="av"><i class="bi bi-heart-pulse-fill"></i></div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>');
+  m.scrollTop = m.scrollHeight;
+  setTimeout(()=>{
+    const el = document.getElementById(tid);
+    if(el) el.querySelector('.bubble').innerHTML = html;
+    m.scrollTop = m.scrollHeight;
+  }, 700);
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* ============ ADMIN PANEL ============ */
+let chartInstances = {};
+function initAdmin(){
+  if (!state.adminAuth) {
+    showView('admin-login');
+    return;
+  }
+  buildUsersTable();
+  buildLibrary();
+  updateAdminStats();
+  destroyCharts();
+  setTimeout(buildCharts, 150);
+}
+function updateAdminStats(){
+  const users = MongoDB.getAllUsers();
+  const stats = MongoDB.getStats();
+  document.getElementById('s-signups').textContent = users.length;
+  document.getElementById('s-signups-delta').textContent = users.length > 0 ? 'In MongoDB' : 'No users yet';
+  document.getElementById('s-diseases').textContent = DISEASES.length;
+  document.getElementById('s-msgs').textContent = (stats.totalMsgs || 0).toLocaleString();
+  document.getElementById('s-msgs-delta').textContent = 'Total tracked';
+}
+function destroyCharts(){
+  Object.values(chartInstances).forEach(c => {
+    if(c && typeof c.destroy === 'function') c.destroy();
+  });
+  chartInstances = {};
+}
+function adminTab(name, el){
+  document.querySelectorAll('.admin-tab').forEach(t=> t.style.display='none');
+  const tab = document.getElementById('tab-'+name);
+  if(tab) tab.style.display='block';
+  document.querySelectorAll('#admin-desktop-nav a[data-tab]').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.querySelectorAll('#admin-mobile-nav a').forEach(a => {
+    a.classList.remove('active');
+    if(a.textContent.trim().toLowerCase().includes(name==='add'?'add':name==='library'?'library':name)) a.classList.add('active');
+  });
+  if(name==='dashboard'){
+    destroyCharts();
+    setTimeout(buildCharts, 150);
+    updateAdminStats();
+  }
+  if(name==='library') buildLibrary(document.getElementById('lib-search-input')?.value || '');
+  if(name==='users') buildUsersTable(document.getElementById('user-search-input')?.value || '');
+}
+window.adminTab = adminTab;
+function adminTabMobile(name, el){
+  document.querySelectorAll('.admin-tab').forEach(t=> t.style.display='none');
+  const tab = document.getElementById('tab-'+name);
+  if(tab) tab.style.display='block';
+  document.querySelectorAll('#admin-mobile-nav a').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.querySelectorAll('#admin-desktop-nav a[data-tab]').forEach(a=>{
+    a.classList.remove('active');
+    if(a.dataset.tab === name) a.classList.add('active');
+  });
+  if(name==='dashboard'){
+    destroyCharts();
+    setTimeout(buildCharts, 150);
+    updateAdminStats();
+  }
+  if(name==='library') buildLibrary(document.getElementById('lib-search-input')?.value || '');
+  if(name==='users') buildUsersTable(document.getElementById('user-search-input')?.value || '');
+}
+window.adminTabMobile = adminTabMobile;
+function buildCharts(){
+  const lineCtx = document.getElementById('chart-msgs');
+  const pieCtx = document.getElementById('chart-pie');
+  const barCtx = document.getElementById('chart-bar');
+  if(!lineCtx || !pieCtx || !barCtx) return;
+  const dashTab = document.getElementById('tab-dashboard');
+  if(!dashTab || dashTab.style.display === 'none') return;
+  try {
+    chartInstances.line = new Chart(lineCtx, {
+      type:'line',
+      data:{
+        labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets:[
+          {label:'User Messages', data:[420,510,640,580,720,890,950], borderColor:'#007BFF', backgroundColor:'rgba(0,123,255,.15)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6},
+          {label:'Bot Replies', data:[450,540,680,610,760,920,980], borderColor:'#28A745', backgroundColor:'rgba(40,167,69,.15)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6}
+        ]
+      },
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:16}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}}}
+    });
+    chartInstances.pie = new Chart(pieCtx,{
+      type:'doughnut',
+      data:{labels:['Active','New','Returning','Dormant'],datasets:[{data:[42,28,22,8],backgroundColor:['#007BFF','#28A745','#fbbf24','#94a3b8'],borderWidth:0,hoverOffset:8}]},
+      options:{responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:14}}}}
+    });
+    chartInstances.bar = new Chart(barCtx,{
+      type:'bar',
+      data:{
+        labels:['Common Cold','Flu','Migraine','Hypertension','Diabetes','Asthma','Gastritis','Anxiety'],
+        datasets:[{label:'Diagnoses', data:[842,610,520,489,402,315,287,256], backgroundColor:['rgba(0,123,255,.75)','rgba(0,123,255,.65)','rgba(0,123,255,.55)','rgba(40,167,69,.7)','rgba(40,167,69,.6)','rgba(40,167,69,.5)','rgba(251,191,36,.7)','rgba(148,163,184,.6)'], borderRadius:8, borderSkipped:false}]
+      },
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}},indexAxis:'x'}
+    });
+  } catch(err) {
+    console.warn('Chart build error:', err);
+  }
+}
+/* ============ USERS TABLE (from MongoDB) ============ */
+function buildUsersTable(filter=''){
+  const tb = document.querySelector('#users-table tbody');
+  if(!tb) return;
+  const f = filter.toLowerCase();
+  const allUsers = MongoDB.getAllUsers();
+  const filtered = allUsers.filter(u => u.email.toLowerCase().includes(f) || (u.name||'').toLowerCase().includes(f));
+  document.getElementById('user-count-label').textContent = filtered.length + ' user' + (filtered.length!==1?'s':'');
+  tb.innerHTML = filtered.map(u=>{
+    const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A';
+    const status = u.status || 'Active';
+    const cls = status==='Active'?'pill-green':status==='New'?'pill-blue':'pill-yellow';
+    return '<tr>' +
+      '<td><b>' + escapeHtml(u.email) + '</b></td>' +
+      '<td>' + escapeHtml(u.name || 'N/A') + '</td>' +
+      '<td>' + joined + '</td>' +
+      '<td>' + (u.msgCount||0) + '</td>' +
+      '<td><span class="pill ' + cls + '">' + status + '</span></td>' +
+      '<td><button class="icon-btn del" title="Delete User" onclick="deleteUserAdmin(\'' + u._id + '\')"><i class="bi bi-trash"></i></button></td>' +
+    '</tr>';
+  }).join('');
+  if(filtered.length === 0){
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No registered users found. Users appear here after they sign up.</td></tr>';
+  }
+}
+window.filterUsers = (v)=>buildUsersTable(v);
+window.deleteUserAdmin = function(id){
+  openModal(
+    '<div style="position:relative;text-align:center;padding:1rem 0">' +
+      '<button class="close-modal" onclick="closeModalForce()" style="position:absolute;top:0;right:0;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted)"><i class="bi bi-x-lg"></i></button>' +
+      '<div style="width:56px;height:56px;border-radius:50%;background:rgba(220,53,69,.1);display:inline-grid;place-items:center;margin-bottom:1rem">' +
+        '<i class="bi bi-person-x" style="font-size:1.5rem;color:#dc3545"></i>' +
+      '</div>' +
+      '<h5>Delete this user?</h5>' +
+      '<p style="color:var(--muted);font-size:.92rem;margin-bottom:1.5rem">This will permanently remove the user from the MongoDB collection.</p>' +
+      '<div class="d-flex justify-content-center gap-2">' +
+        '<button class="btn-ghost" onclick="closeModalForce()">Cancel</button>' +
+        '<button class="btn-danger" onclick="confirmDeleteUser(\'' + id + '\')"><i class="bi bi-trash"></i> Delete</button>' +
+      '</div>' +
+    '</div>'
+  );
+};
+window.confirmDeleteUser = function(id){
+  MongoDB.deleteUser(id);
+  closeModalForce();
+  buildUsersTable(document.getElementById('user-search-input')?.value || '');
+  updateAdminStats();
+  showToast('🗑️ User deleted from MongoDB');
+};
+/* ============ DISEASE LIBRARY ============ */
+function getFilteredDiseases(filter=''){
+  const f = filter.toLowerCase().trim();
+  const sevFilter = document.getElementById('lib-severity-filter')?.value || '';
+  return DISEASES.filter(d => {
+    const textMatch = !f || d.name.toLowerCase().includes(f) || d.symptoms.some(s=>s.toLowerCase().includes(f));
+    const sevMatch = !sevFilter || d.severity === sevFilter;
+    return textMatch && sevMatch;
+  });
+}
+function buildLibrary(filter=''){
+  const tb = document.querySelector('#lib-table tbody');
+  if(!tb) return;
+  const filtered = getFilteredDiseases(filter);
+  document.getElementById('lib-count').textContent = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / state.libPerPage));
+  if(state.libPage > totalPages) state.libPage = totalPages;
+  const start = (state.libPage - 1) * state.libPerPage;
+  const pageItems = filtered.slice(start, start + state.libPerPage);
+  tb.innerHTML = pageItems.map((d,i)=>{
+    const globalIdx = DISEASES.indexOf(d);
+    const cls = d.severity==='major'?'pill-red':d.severity==='moderate'?'pill-blue':'pill-green';
+    return '<tr>' +
+      '<td>' + (start+i+1) + '</td>' +
+      '<td><b>' + d.name + '</b></td>' +
+      '<td style="max-width:380px;color:var(--muted);font-size:.85rem">' + d.symptoms.slice(0,4).join(' • ') + (d.symptoms.length>4?' …':'') + '</td>' +
+      '<td><span class="pill ' + cls + '">' + d.severity + '</span></td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="icon-btn" title="View Details" onclick="viewDisease(' + globalIdx + ')"><i class="bi bi-eye"></i></button>' +
+        '<button class="icon-btn" title="Edit" onclick="editDisease(' + globalIdx + ')"><i class="bi bi-pencil"></i></button>' +
+        '<button class="icon-btn del" title="Delete" onclick="deleteDisease(' + globalIdx + ')"><i class="bi bi-trash"></i></button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+  if(pageItems.length === 0){
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">No diseases found matching your search.</td></tr>';
+  }
+  const pagDiv = document.getElementById('lib-pagination');
+  if(!pagDiv) return;
+  if(totalPages <= 1){
+    pagDiv.innerHTML = '<div class="info">Showing ' + filtered.length + ' of ' + DISEASES.length + ' diseases</div><div></div>';
+    return;
+  }
+  let pgHtml = '<div class="info">Showing ' + (start+1) + '–' + Math.min(start+state.libPerPage, filtered.length) + ' of ' + filtered.length + '</div><div class="pg-btns">';
+  pgHtml += '<button class="pg-btn" onclick="libPageGo(' + (state.libPage-1) + ')" ' + (state.libPage<=1?'disabled':'') + '><i class="bi bi-chevron-left"></i></button>';
+  for(let p=1; p<=totalPages; p++){
+    if(totalPages > 7 && p > 2 && p < totalPages-1 && Math.abs(p - state.libPage) > 1){
+      if(p === 3 || p === totalPages-2) pgHtml += '<span style="padding:0 .3rem;color:var(--muted)">…</span>';
+      continue;
+    }
+    pgHtml += '<button class="pg-btn ' + (p===state.libPage?'active':'') + '" onclick="libPageGo(' + p + ')">' + p + '</button>';
+  }
+  pgHtml += '<button class="pg-btn" onclick="libPageGo(' + (state.libPage+1) + ')" ' + (state.libPage>=totalPages?'disabled':'') + '><i class="bi bi-chevron-right"></i></button>';
+  pgHtml += '</div>';
+  pagDiv.innerHTML = pgHtml;
+}
+window.libPageGo = (p)=>{
+  const filtered = getFilteredDiseases(document.getElementById('lib-search-input')?.value || '');
+  const totalPages = Math.max(1, Math.ceil(filtered.length / state.libPerPage));
+  if(p < 1 || p > totalPages) return;
+  state.libPage = p;
+  buildLibrary(document.getElementById('lib-search-input')?.value || '');
+};
+window.filterDiseases = (v)=>{
+  state.libPage = 1;
+  buildLibrary(v);
+};
+/* ============ VIEW / EDIT / DELETE DISEASE ============ */
+window.viewDisease = function(idx){
+  if (!state.adminAuth) { showToast('🔒 Admin access required'); return; }
+  const d = DISEASES[idx];
+  if(!d) return;
+  const sevColor = d.severity==='major'?'pill-red':d.severity==='moderate'?'pill-blue':'pill-green';
+  openModal(
+    '<div style="position:relative">' +
+      '<button class="close-modal" onclick="closeModalForce()" style="position:absolute;top:0;right:0;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted)"><i class="bi bi-x-lg"></i></button>' +
+      '<h4 style="color:var(--primary)">' + d.name + '</h4>' +
+      '<span class="pill ' + sevColor + '" style="font-size:.8rem">' + d.severity.toUpperCase() + '</span>' +
+      '<div class="modal-section">' +
+        '<label>Symptoms (' + d.symptoms.length + ')</label>' +
+        '<div>' + d.symptoms.map(s=>'<span class="symptom-tag">'+s+'</span>').join('') + '</div>' +
+      '</div>' +
+      '<div class="modal-section">' +
+        '<label>🍵 Home Remedies</label>' +
+        '<div class="val">' + d.remedies + '</div>' +
+      '</div>' +
+      '<div class="modal-section">' +
+        '<label>💊 Prescriptions</label>' +
+        '<div class="val">' + d.prescriptions + '</div>' +
+      '</div>' +
+      '<div class="disclaimer" style="margin-top:1rem">⚠️ Always consult a licensed pharmacist or doctor before taking any medication.</div>' +
+    '</div>'
+  );
+};
+window.editDisease = function(idx){
+  if (!state.adminAuth) { showToast('🔒 Admin access required'); return; }
+  const d = DISEASES[idx];
+  if(!d) return;
+  openModal(
+    '<div style="position:relative">' +
+      '<button class="close-modal" onclick="closeModalForce()" style="position:absolute;top:0;right:0;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted)"><i class="bi bi-x-lg"></i></button>' +
+      '<h4 style="margin-bottom:1rem"><i class="bi bi-pencil-square" style="color:var(--primary)"></i> Edit Disease</h4>' +
+      '<div class="edit-form">' +
+        '<label>Disease Name</label>' +
+        '<input class="form-control" id="edit-name" value="' + d.name + '" />' +
+        '<label>Symptoms (comma-separated)</label>' +
+        '<textarea class="form-control" id="edit-symptoms" style="min-height:80px">' + d.symptoms.join(', ') + '</textarea>' +
+        '<label>Severity</label>' +
+        '<select class="form-control" id="edit-severity">' +
+          '<option value="minor" ' + (d.severity==='minor'?'selected':'') + '>Minor</option>' +
+          '<option value="moderate" ' + (d.severity==='moderate'?'selected':'') + '>Moderate</option>' +
+          '<option value="major" ' + (d.severity==='major'?'selected':'') + '>Major</option>' +
+        '</select>' +
+        '<label>Remedies</label>' +
+        '<textarea class="form-control" id="edit-remedies" style="min-height:70px">' + d.remedies + '</textarea>' +
+        '<label>Prescriptions</label>' +
+        '<textarea class="form-control" id="edit-prescriptions" style="min-height:70px">' + d.prescriptions + '</textarea>' +
+        '<div class="d-flex gap-2 mt-3">' +
+          '<button class="btn-grad" onclick="saveEditDisease(' + idx + ')"><i class="bi bi-check-lg"></i> Save Changes</button>' +
+          '<button class="btn-ghost" onclick="closeModalForce()">Cancel</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+};
+window.saveEditDisease = function(idx){
+  const name = document.getElementById('edit-name').value.trim();
+  const symptoms = document.getElementById('edit-symptoms').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const severity = document.getElementById('edit-severity').value;
+  const remedies = document.getElementById('edit-remedies').value.trim();
+  const prescriptions = document.getElementById('edit-prescriptions').value.trim();
+  if(!name){
+    showToast('❌ Disease name is required');
+    return;
+  }
+  if(symptoms.length === 0){
+    showToast('❌ At least one symptom is required');
+    return;
+  }
+  DISEASES[idx] = {name, symptoms, severity, remedies, prescriptions};
+  closeModalForce();
+  buildLibrary(document.getElementById('lib-search-input')?.value || '');
+  showToast('✅ ' + name + ' updated successfully!');
+};
+window.deleteDisease = function(idx){
+  if (!state.adminAuth) { showToast('🔒 Admin access required'); return; }
+  const d = DISEASES[idx];
+  if(!d) return;
+  openModal(
+    '<div style="position:relative;text-align:center;padding:1rem 0">' +
+      '<button class="close-modal" onclick="closeModalForce()" style="position:absolute;top:0;right:0;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted)"><i class="bi bi-x-lg"></i></button>' +
+      '<div style="width:56px;height:56px;border-radius:50%;background:rgba(220,53,69,.1);display:inline-grid;place-items:center;margin-bottom:1rem">' +
+        '<i class="bi bi-trash" style="font-size:1.5rem;color:#dc3545"></i>' +
+      '</div>' +
+      '<h5>Delete "' + d.name + '"?</h5>' +
+      '<p style="color:var(--muted);font-size:.92rem;margin-bottom:1.5rem">This action cannot be undone. The disease and all its data will be permanently removed from the MongoDB collection.</p>' +
+      '<div class="d-flex justify-content-center gap-2">' +
+        '<button class="btn-ghost" onclick="closeModalForce()">Cancel</button>' +
+        '<button class="btn-danger" onclick="confirmDeleteDisease(' + idx + ')"><i class="bi bi-trash"></i> Delete</button>' +
+      '</div>' +
+    '</div>'
+  );
+};
+window.confirmDeleteDisease = function(idx){
+  const name = DISEASES[idx]?.name || 'Disease';
+  DISEASES.splice(idx, 1);
+  closeModalForce();
+  buildLibrary(document.getElementById('lib-search-input')?.value || '');
+  updateAdminStats();
+  showToast('🗑️ ' + name + ' deleted successfully');
+};
+/* ============ ADD DISEASE ============ */
+function extractDisease(){
+  if (!state.adminAuth) { showToast('🔒 Admin access required'); return; }
+  const raw = document.getElementById('raw-disease').value;
+  if(!raw.trim()){
+    showToast('❌ Please paste disease text before extracting');
+    return;
+  }
+  const out = document.getElementById('extract-out');
+  const name = (raw.match(/Name\s*[:\-]\s*(.+)/i)||[])[1]?.trim() || 'Unnamed';
+  const symLine = (raw.match(/Symptoms?\s*[:\-]\s*(.+)/i)||[])[1] || '';
+  const remedies = (raw.match(/Remed(?:y|ies)\s*[:\-]\s*(.+)/i)||[])[1]?.trim() || '';
+  const presc = (raw.match(/Prescriptions?\s*[:\-]\s*(.+)/i)||[])[1]?.trim() || '';
+  const symptoms = symLine.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+  if(name === 'Unnamed' && symptoms.length === 0){
+    out.classList.add('show');
+    out.innerHTML =
+      '<h6 style="color:#dc3545;font-weight:700"><i class="bi bi-exclamation-triangle-fill"></i> Could Not Extract</h6>' +
+      '<p class="text-muted small mb-0">Please format your input with labels like:<br><code>Name: ...</code><br><code>Symptoms: ...</code><br><code>Remedies: ...</code><br><code>Prescriptions: ...</code></p>';
+    return;
+  }
+  const exists = DISEASES.find(d=> d.name.toLowerCase() === name.toLowerCase());
+  if(exists){
+    out.classList.add('show');
+    out.innerHTML =
+      '<h6 style="color:#f59e0b;font-weight:700"><i class="bi bi-exclamation-circle-fill"></i> Duplicate Warning</h6>' +
+      '<p class="mb-1">"<b>' + name + '</b>" already exists in the database.</p>' +
+      '<button class="btn-grad btn-sm" onclick="forceAddDisease(\'' + encodeURIComponent(name) + '\',\'' + encodeURIComponent(JSON.stringify(symptoms)) + '\',\'' + encodeURIComponent(remedies) + '\',\'' + encodeURIComponent(presc) + '\')">Add Anyway</button>';
+    return;
+  }
+  addDiseaseToDb(name, symptoms, remedies, presc);
+}
+window.extractDisease = extractDisease;
+function addDiseaseToDb(name, symptoms, remedies, presc){
+  const out = document.getElementById('extract-out');
+  DISEASES.unshift({name, symptoms, remedies, prescriptions:presc, severity:'moderate'});
+  out.classList.add('show');
+  out.innerHTML =
+    '<h6 style="color:var(--success);font-weight:700"><i class="bi bi-check-circle-fill"></i> Extracted & Saved to MongoDB</h6>' +
+    '<div class="mt-2"><b>Name:</b> ' + name + '</div>' +
+    '<div><b>Symptoms (' + symptoms.length + '):</b> ' + symptoms.map(s=>'<span class="symptom-tag">'+s+'</span>').join('') + '</div>' +
+    '<div><b>Remedies:</b> ' + (remedies || '<i class="text-muted">none parsed</i>') + '</div>' +
+    '<div><b>Prescriptions:</b> ' + (presc || '<i class="text-muted">none parsed</i>') + '</div>' +
+    '<div class="mt-2 small text-muted">Disease added to MongoDB collection. Total: <b>' + DISEASES.length + '</b> diseases.</div>';
+  buildLibrary();
+  updateAdminStats();
+  showToast('✅ ' + name + ' added to MongoDB!');
+}
+window.forceAddDisease = function(n,s,r,p){
+  addDiseaseToDb(decodeURIComponent(n), JSON.parse(decodeURIComponent(s)), decodeURIComponent(r), decodeURIComponent(p));
+};
+function clearExtractForm(){
+  document.getElementById('raw-disease').value = '';
+  const out = document.getElementById('extract-out');
+  out.classList.remove('show');
+  out.innerHTML = '';
+}
+window.clearExtractForm = clearExtractForm;
+/* ============ BACKEND API INTEGRATION ============ */
+const API_BASE = '/api';
+async function apiCall(endpoint, options = {}) {
+  console.log('API call:', endpoint, options);
+  try {
+    const res = await fetch(API_BASE + endpoint, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      credentials: 'include'
+    });
+    console.log('Response status:', res.status);
+    const data = await res.json();
+    console.log('Response data:', data);
+    if (!res.ok) {
+      throw new Error(data.error || 'Request failed');
+    }
+    return data;
+  } catch (e) {
+    console.error('API Error:', e);
+    throw e;
+  }
+}
+const API = {
+  register: (email, password, name) => 
+    apiCall('/auth/register', { 
+      method: 'POST', 
+      body: JSON.stringify({ email, password, name }) 
+    }),
+  
+  login: (email, password) => 
+    apiCall('/auth/login', { 
+      method: 'POST', 
+      body: JSON.stringify({ email, password }) 
+    }),
+  
+  logout: () => 
+    apiCall('/auth/logout', { method: 'POST' }),
+  
+  me: () => 
+    apiCall('/auth/me'),
+  
+  chat: (message) => 
+    apiCall('/chat', { 
+      method: 'POST', 
+      body: JSON.stringify({ message }) 
+    }),
+  
+  chatHistory: (limit = 50) => 
+    apiCall('/chat/history?limit=' + limit),
+  
+  adminLogin: (username, password) => 
+    apiCall('/admin/login', { 
+      method: 'POST', 
+      body: JSON.stringify({ username, password }) 
+    }),
+  
+  adminLogout: () => 
+    apiCall('/admin/logout', { method: 'POST' }),
+  
+  adminStats: () => 
+    apiCall('/admin/stats'),
+  
+  adminUsers: () => 
+    apiCall('/admin/users'),
+  
+  adminDiseases: (page = 1, search = '') => 
+    apiCall('/admin/diseases?page=' + page + '&search=' + encodeURIComponent(search)),
+  
+  addDisease: (disease) => 
+    apiCall('/admin/diseases', { 
+      method: 'POST', 
+      body: JSON.stringify(disease) 
+    }),
+  
+  deleteDisease: (id) => 
+    apiCall('/admin/diseases/' + id, { method: 'DELETE' }),
+  
+  chartMessages: () => 
+    apiCall('/admin/chart/messages'),
+  
+  chartDiseases: () => 
+    apiCall('/admin/chart/diseases')
+};
+async function initBackendConnection() {
+  try {
+    const data = await API.me();
+    if (data.user) {
+      state.user = data.user;
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+      updateUserUI();
+      loadChatHistory();
+    }
+  } catch (e) {
+    console.log('Backend not connected or user not authenticated');
+  }
+}
+async function loadChatHistory() {
+  try {
+    const data = await API.chatHistory();
+    state.history = data.history || [];
+    renderHistory();
+  } catch (e) {
+    console.log('Could not load chat history from backend');
+  }
+}
+window.doLogin = async function(e) {
+  e.preventDefault();
+  const emailEl = document.getElementById('login-email');
+  const passEl = document.getElementById('login-pass');
+  const errEl = document.getElementById('login-error');
+  
+  if (!emailEl.value || !passEl.value) {
+    errEl.textContent = 'Please fill in all fields';
+    errEl.classList.add('show');
+    return;
+  }
+  
+  try {
+    const data = await API.login(emailEl.value, passEl.value);
+    if (data.success) {
+      state.user = data.user;
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+      errEl.classList.remove('show');
+      updateUserUI();
+      showView('chat');
+      loadChatHistory();
+    }
+  } catch (e) {
+    errEl.textContent = e.message || 'Login failed';
+    errEl.classList.add('show');
+  }
+};
+window.doRegister = async function(e) {
+  e.preventDefault();
+  const nameEl = document.getElementById('reg-name');
+  const emailEl = document.getElementById('reg-email');
+  const passEl = document.getElementById('reg-pass');
+  const pass2El = document.getElementById('reg-pass2');
+  const errEl = document.getElementById('reg-error');
+  
+  if (!nameEl.value || !emailEl.value || !passEl.value) {
+    errEl.textContent = 'Please fill in all fields';
+    errEl.classList.add('show');
+    return;
+  }
+  
+  if (passEl.value !== pass2El.value) {
+    errEl.textContent = 'Passwords do not match';
+    errEl.classList.add('show');
+    return;
+  }
+  
+  try {
+    const data = await API.register(emailEl.value, passEl.value, nameEl.value);
+    if (data.success) {
+      state.user = data.user;
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+      errEl.classList.remove('show');
+      updateUserUI();
+      showView('chat');
+      loadChatHistory();
+    }
+  } catch (e) {
+    errEl.textContent = e.message || 'Registration failed';
+    errEl.classList.add('show');
+  }
+};
+window.logout = async function() {
+  try {
+    await API.logout();
+  } catch (e) {}
+  state.user = null;
+  state.history = [];
+  sessionStorage.removeItem('user');
+  renderHistory();
+  showView('landing');
+  showToast('👋 Logged out successfully');
+};
+window.sendMessage = async function(e) {
+  if (e && e.preventDefault) {
+    e.preventDefault();
+  }
+  console.log('sendMessage called, state.user:', state.user);
+  
+  if (!state.user) {
+    showToast('Please login first');
+    showView('login');
+    return;
+  }
+  
+  const input = document.getElementById('chat-input');
+  if (!input) {
+    console.error('chat-input element not found');
+    return;
+  }
+  
+  const msg = input.value.trim();
+  if (!msg) {
+    console.log('empty message, returning');
+    return;
+  }
+  
+  console.log('Sending message:', msg);
+  
+  // Add user message to chat
+  const msgDiv = document.getElementById('messages');
+  if (msgDiv) {
+    const initial = (state.user?.name?.[0]||'U').toUpperCase();
+    msgDiv.insertAdjacentHTML('beforeend', '<div class="msg user"><div class="av">' + initial + '</div><div class="bubble">' + escapeHtml(msg) + '</div></div>');
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+  }
+  
+  input.value = '';
+  
+  // Show typing indicator
+  const tid = 'typ'+Date.now();
+  if (msgDiv) {
+    msgDiv.insertAdjacentHTML('beforeend', '<div class="msg bot" id="' + tid + '"><div class="av"><i class="bi bi-heart-pulse-fill"></i></div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>');
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+  }
+  
+  try {
+    console.log('Calling API.chat...');
+    const data = await API.chat(msg);
+    console.log('API response:', data);
+    
+    // Replace typing with bot response
+    const el = document.getElementById(tid);
+    if (el) {
+      el.querySelector('.bubble').innerHTML = data.message;
+      msgDiv.scrollTop = msgDiv.scrollHeight;
+    }
+    
+    if (data.type === 'diagnosis') {
+      const quickActions = document.querySelector('.quick-chips');
+      if (quickActions) {
+        quickActions.innerHTML = '<button class="chip" onclick="sendQuickMessage(\'What else?\')">What else?</button><button class="chip" onclick="sendQuickMessage(\'New symptoms\')">New symptoms</button><button class="chip" onclick="newChat()">New chat</button>';
+      }
+    }
+  } catch (e) {
+    console.error('Chat error:', e);
+    addMessage('Error: ' + e.message, 'bot');
+  }
+};
+window.sendQuickMessage = async function(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendMessage(new Event('submit'));
+};
+window.doAdminLogin = async function(e) {
+  e.preventDefault();
+  const userEl = document.getElementById('admin-login-user');
+  const passEl = document.getElementById('admin-login-pass');
+  const errEl = document.getElementById('admin-login-error');
+  
+  try {
+    const data = await API.adminLogin(userEl.value, passEl.value);
+    if (data.success) {
+      state.adminAuth = true;
+      sessionStorage.setItem('admin_auth', 'true');
+      errEl.classList.remove('show');
+      showView('admin');
+      updateAdminStats();
+      loadAdminData();
+    }
+  } catch (e) {
+    errEl.textContent = e.message || 'Admin login failed';
+    errEl.classList.add('show');
+  }
+};
+window.adminLogout = async function() {
+  try {
+    await API.adminLogout();
+  } catch (e) {}
+  state.adminAuth = false;
+  sessionStorage.removeItem('admin_auth');
+  showView('landing');
+  showToast('👋 Admin logged out');
+};
+async function updateAdminStats() {
+  if (!state.adminAuth) return;
+  try {
+    const data = await API.adminStats();
+    document.getElementById('s-visits').textContent = data.visits.toLocaleString();
+    document.getElementById('s-signups').textContent = data.signups;
+    document.getElementById('s-diseases').textContent = data.diseases_count;
+    document.getElementById('s-msgs').textContent = data.total_msgs;
+  } catch (e) {
+    console.log('Could not update admin stats');
+  }
+}
+async function loadAdminData() {
+  if (!state.adminAuth) return;
+  try {
+    const [userData, diseaseData, msgChart, diseaseChart] = await Promise.all([
+      API.adminUsers(),
+      API.adminDiseases(),
+      API.chartMessages(),
+      API.chartDiseases()
+    ]);
+    
+    state.adminUsers = userData.users || [];
+    state.adminDiseases = diseaseData.diseases || [];
+    
+    renderUsersTable(state.adminUsers);
+    buildLibraryFromData(state.adminDiseases);
+    renderCharts(msgChart, diseaseChart);
+  } catch (e) {
+    console.log('Could not load admin data');
+  }
+}
+window.extractDisease = async function() {
+  if (!state.adminAuth) return;
+  const text = document.getElementById('raw-disease').value;
+  if (!text) return;
+  
+  const nameMatch = text.match(/Name:\s*(.+?)(?:\n|$)/i);
+  const symptomsMatch = text.match(/Symptoms?:\s*(.+?)(?:\n\n|Prescriptions:|$)|$/i);
+  const remediesMatch = text.match(/Remedies?:\s*(.+?)(?:\n\n|Prescriptions:|$)|$/i);
+  const prescMatch = text.match(/Prescriptions?:\s*(.+)$/i);
+  
+  const name = nameMatch ? nameMatch[1].trim() : 'Unknown Disease';
+  const symptoms = symptomsMatch ? symptomsMatch[1].split(/[,;]/).map(s => s.trim()).filter(s => s) : [];
+  const remedies = remediesMatch ? remediesMatch[1].trim() : '';
+  const prescriptions = prescMatch ? prescMatch[1].trim() : '';
+  const severity = 'moderate';
+  
+  try {
+    await API.addDisease({ name, symptoms, remedies, prescriptions, severity });
+    showToast('✅ ' + name + ' added to MongoDB!');
+    document.getElementById('raw-disease').value = '';
+    loadAdminData();
+  } catch (e) {
+    showToast('❌ Failed to add disease');
+  }
+};
+function renderUsersTable(users) {
+  const tbody = document.querySelector('#users-table tbody');
+  if (!tbody) return;
+  
+  tbody.innerHTML = users.map(u => 
+    '<tr><td>' + u.email + '</td><td>' + (u.name || 'User') + '</td><td>' + new Date(u.created_at).toLocaleDateString() + '</td><td>' + u.chats_count + '</td><td><span class="pill pill-green">Active</span></td><td><button class="icon-btn del" onclick="deleteUser(\'' + u.id + '\')"><i class="bi bi-trash"></i></button></td></tr>'
+  ).join('');
+  
+  document.getElementById('user-count-label').textContent = users.length + ' users';
+}
+function buildLibraryFromData(diseases) {
+  const tb = document.querySelector('#lib-table tbody');
+  if (!tb) return;
+  
+  document.getElementById('lib-count').textContent = diseases.length;
+  
+  tb.innerHTML = diseases.map((d, i) => 
+    '<tr><td>' + (i + 1) + '</td><td><b>' + d.name + '</b></td><td>' + d.symptoms.slice(0, 4).join(' • ') + '</td><td><span class="pill ' + (d.severity === 'major' ? 'pill-red' : d.severity === 'moderate' ? 'pill-blue' : 'pill-green') + '">' + d.severity + '</span></td><td><button class="icon-btn" onclick="viewDisease(\'' + d.id + '\')"><i class="bi bi-eye"></i></button><button class="icon-btn del" onclick="deleteDisease(\'' + d.id + '\')"><i class="bi bi-trash"></i></button></td></tr>'
+  ).join('');
+}
+function renderCharts(msgData, diseaseData) {
+  if (typeof Chart === 'undefined') return;
+  
+  const msgCtx = document.getElementById('chart-msgs');
+  if (msgCtx && window.msgChart) window.msgChart.destroy();
+  if (msgCtx) {
+    window.msgChart = new Chart(msgCtx, {
+      type: 'bar',
+      data: {
+        labels: msgData.labels,
+        datasets: [{
+          label: 'Messages',
+          data: msgData.data,
+          backgroundColor: '#007BFF'
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+  
+  const pieCtx = document.getElementById('chart-pie');
+  if (pieCtx && window.pieChart) window.pieChart.destroy();
+  if (pieCtx) {
+    window.pieChart = new Chart(pieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Active', 'Inactive'],
+        datasets: [{
+          data: [80, 20],
+          backgroundColor: ['#28A745', '#e5e7eb']
+        }]
+      }
+    });
+  }
+}
+window.deleteUser = async function(id) {
+  if (!state.adminAuth) return;
+  showToast('Delete user: ' + id);
+};
+window.deleteDisease = async function(id) {
+  if (!state.adminAuth) return;
+  if (confirm('Delete this disease?')) {
+    try {
+      await API.deleteDisease(id);
+      loadAdminData();
+      showToast('Disease deleted');
+    } catch (e) {
+      showToast('Failed to delete');
+    }
+  }
+};
+window.viewDisease = function(id) {
+  if (!state.adminAuth) return;
+  openModal('<p>Disease ID: ' + id + '</p><button class="btn-ghost" onclick="closeModalForce()">Close</button>');
+};
+/* ============ INIT ============ */
+async function init() {
+  // Set up chat input events
+  const chatInput = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+  
+  if (chatInput) {
+    chatInput.addEventListener('keydown', function(e) {
+      console.log('Key pressed:', e.key, 'Shift:', e.shiftKey);
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          // Shift+Enter = newline (let default behavior)
+          return;
+        } else {
+          // Enter = send message
+          e.preventDefault();
+          e.stopPropagation();
+          window.sendMessage(e);
+        }
+      }
+    });
+  }
+  
+  if (sendBtn) {
+    sendBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.sendMessage(e);
+    });
+  }
+  
+  // Also test on form submit if there's a form
+  const chatForm = document.querySelector('.chat-input-wrap');
+  if (chatForm) {
+    chatForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      window.sendMessage(e);
+    });
+  }
+  
+  renderHistory();
+  await initBackendConnection();
+  
+  if (state.user) {
+    updateUserUI();
+  }
+  
+  if (sessionStorage.getItem('admin_auth') === 'true') {
+    state.adminAuth = true;
+    showView('admin');
+    updateAdminStats();
+    loadAdminData();
+  }
+}
+init();
 </script>
 </body>
 </html>
