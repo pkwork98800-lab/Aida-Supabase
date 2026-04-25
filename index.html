@@ -631,8 +631,17 @@ grant select, insert, update, delete on public.aida_chat_messages to authenticat
 
     document.addEventListener("DOMContentLoaded", () => {
       initThreeScene();
-      initSupabase();
       bindEvents();
+      // Wait for Supabase CDN script to load
+      function tryInitSupabase() {
+        if (window.supabase) {
+          initSupabase();
+        } else {
+          console.log("Waiting for Supabase SDK...");
+          setTimeout(tryInitSupabase, 300);
+        }
+      }
+      tryInitSupabase();
     });
 
     function bindEvents() {
@@ -712,13 +721,25 @@ grant select, insert, update, delete on public.aida_chat_messages to authenticat
       label.classList.add("hidden");
 
       try {
-        if (authMode === "signin") {
+        console.log("Attempting auth:", authMode, "with Supabase client:", !!supabaseClient);
+        if (!supabaseClient) {
+          msg.textContent = "⚠️ Supabase not connected. Please wait and try again.";
+          msg.className = "mt-4 text-center text-sm text-red-300";
+          spinner.classList.add("hidden");
+          label.classList.remove("hidden");
+          return;
+        }
+        console.log("Attempting sign in...");
           const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          console.log("Sign in result:", error);
           if (error) { msg.textContent = error.message; msg.className = "mt-4 text-center text-sm text-red-300"; return; }
           msg.textContent = "Signed in successfully!";
           msg.className = "mt-4 text-center text-sm text-emerald-300";
         } else {
-          const { error } = await supabaseClient.auth.signUp({ email, password });
+          console.log("Attempting sign up...");
+          const { data, error } = await supabaseClient.auth.signUp({ email, password });
+          console.log("Sign up result:", data, error);
+          if (error) { msg.textContent = error.message; msg.className = "mt-4 text-center text-sm text-red-300"; return; }
           if (error) { msg.textContent = error.message; msg.className = "mt-4 text-center text-sm text-red-300"; return; }
           msg.textContent = "Account created! You can now sign in.";
           msg.className = "mt-4 text-center text-sm text-emerald-300";
@@ -844,6 +865,10 @@ grant select, insert, update, delete on public.aida_chat_messages to authenticat
     }
 
     async function initSupabase() {
+      console.log("Supabase SDK loaded:", !!window.supabase);
+      console.log("Supabase URL:", SUPABASE_URL);
+      console.log("Supabase configured:", isSupabaseConfigured());
+      
       if (!isSupabaseConfigured() || !window.supabase) {
         document.getElementById("authMessage").textContent = "⚠️ Edit SUPABASE_URL and SUPABASE_ANON_KEY in this file first.";
         document.getElementById("authMessage").className = "mt-4 text-center text-sm text-amber-300";
@@ -853,6 +878,7 @@ grant select, insert, update, delete on public.aida_chat_messages to authenticat
       }
 
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log("Supabase client created:", !!supabaseClient);
       const { data, error } = await supabaseClient.auth.getSession();
       if (error) { console.error("Auth init error:", error); showLoginGate(); hideChatApp(); return; }
 
