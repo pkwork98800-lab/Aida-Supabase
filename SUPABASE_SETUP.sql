@@ -110,6 +110,3 @@ grant select on public.aida_daily_metrics to anon, authenticated;
 grant insert, update, delete on public.aida_daily_metrics to authenticated;
 grant select, insert, update, delete on public.aida_chat_sessions to authenticated;
 grant select, insert, update, delete on public.aida_chat_messages to authenticated;
-
--- Enable Anon Key Access
-alter anonymous role to bypass rls;

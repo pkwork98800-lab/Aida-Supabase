@@ -468,8 +468,8 @@ grant select, insert, update, delete on public.aida_chat_messages to authenticat
     ];
 
     /* Admin credentials — CHANGE THESE */
-    const ADMIN_EMAIL = "admin@yourdomain.com";
-    const ADMIN_PASSWORD = "AidaAdmin2024!";
+    const ADMIN_EMAIL = "admin@aida.com";
+    const ADMIN_PASSWORD = "AidaAdmin2024";
 
     const emergencyPatterns = [
       { rx: /\b(chest pain|chest pressure|heart attack|crushing pain|pain going to left arm|jaw pain with sweating)\b/i, message: "Chest pain or pressure can be heart-related and dangerous." },
@@ -685,7 +685,8 @@ grant select, insert, update, delete on public.aida_chat_messages to authenticat
 
     function validateEmailDomain(email) {
       const domain = email.split("@")[1]?.toLowerCase();
-      return ALLOWED_EMAIL_DOMAINS.includes(domain);
+      // Allow all email domains for easier signup
+      return true;
     }
 
     // ─── Auth submit handler ─────────────────────
